@@ -1,0 +1,25 @@
+{
+  "name": "PhotoImp",
+  "version": "0.0.1",
+  "description": "Import photos easily to your PC",
+  "main": "app.js",
+  "scripts": {
+    "start": "bash startdev.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ValYouW/PhotoImp.git"
+  },
+  "author": {
+    "name": "ValYouW",
+    "email": "ValYouW@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ValYouW/PhotoImp/issues"
+  },
+  "homepage": "https://github.com/ValYouW/PhotoImp",
+  "dependencies": {
+    "electron-debug": "^0.2.1"
+  }
+}
