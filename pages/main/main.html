@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="mainWinApp">
 <head>
     <meta charset="UTF-8">
     <script src="main-view-controller.js"></script>
 </head>
 <body>
-<div id="txtFiles"></div>
+<div id="txtFiles" ng-controller="mainWinCtrl as ctrl">
+    {{ctrl.name}}
+    <input type="text" ng-model="ctrl.name">
+</div>
 </body>
 </html>
