@@ -3,11 +3,18 @@ var CONSTANTS = require('../../common/constants.js'),
 	settingsCtrl = require('../settings/settings-controller.js'),
 	dialog = require('dialog'),
 	Menu = require('menu'),
+	File = require('../../common/file.js'),
 	path = require('path'),
 	app = require('app'),
 	fs = require('fs');
 
 var IS_IMG_REGEX = new RegExp('.*\.(' + CONSTANTS.DEFAULTS.FILE_TYPES.join('|') + ')$', 'i');
+
+function fileComperator(f1, f2) {
+	if (f1.lastModified < f2.lastModified) {return -1;}
+	if (f1.lastModified > f2.lastModified) {return 1;}
+	return 0;
+}
 
 function MainController() {
 	this.window = null;
@@ -57,16 +64,16 @@ MainController.prototype.loadImages = function(folder) {
 		}
 
 		var filteredExts = {};
-		files = files.filter(function cbFilterFile(file) {
+		files = files.map(function cbFilterFile(file) {
 			var stat = fs.lstatSync(path.join(folder, file));
-			if (!stat || !stat.isFile()) { return false; }
-			if (IS_IMG_REGEX.test(file)) { return true; }
+			if (!stat || !stat.isFile()) { return null; }
+			if (IS_IMG_REGEX.test(file)) { return new File(file, stat.size || stat.blocks, stat.mtime); }
 
 			// This file extension should be ignored, save the extension in the hash
 			var m = file.match(/.*\.(.*)$/);
 			if (m) { filteredExts[m[1]] = true; }
-			return false;
-		});
+			return null;
+		}).filter(function(i){ return i;}).sort(fileComperator);
 
 		var ignoredExts = Object.keys(filteredExts);
 		if (ignoredExts.length > 0) {

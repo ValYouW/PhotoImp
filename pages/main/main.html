@@ -5,9 +5,17 @@
     <script src="main-view-controller.js"></script>
 </head>
 <body>
-<div id="txtFiles" ng-controller="mainWinCtrl as ctrl">
-    {{ctrl.name}}
-    <input type="text" ng-model="ctrl.name">
+<div ng-controller="mainWinCtrl as ctrl">
+    <select multiple>
+        <option ng-repeat="date in ctrl.fileDates">
+            {{date}}
+        </option>
+    </select>
+    <select multiple>
+        <option ng-repeat="file in ctrl.files">
+            {{file.name}} {{file.mdate}}
+        </option>
+    </select>
 </div>
 </body>
 </html>
