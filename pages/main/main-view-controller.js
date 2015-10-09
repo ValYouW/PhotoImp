@@ -4,12 +4,30 @@ var CONSTANTS = require('../../common/constants.js'),
 	angular = require('angular'),
 	ngUtils = require('../ng-utils.js');
 
-var ngApp = angular.module('mainWinApp', []);
+var ngApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection']);
 
 function MainWinCtrl(scope) {
 	this.fileDates = [];
 	this.files = [];
 	this.scope = scope;
+
+	this.datesGridOps = {};
+	this.filesGridOpts = {};
+	angular.extend(this.datesGridOps, CONSTANTS.DEFAULTS.SEL_GRID_OPTS);
+	angular.extend(this.filesGridOpts, CONSTANTS.DEFAULTS.SEL_GRID_OPTS);
+
+	// The dates grid columns
+	this.datesGridOps.columnDefs = [
+		{ name: 'date', type: 'numberStr' }
+	];
+
+	// The files grid columns
+	this.filesGridOpts.columnDefs = [
+		{ name: 'name' },
+		{ name: 'size', type: 'number' },
+		{ name: 'mdate', displayName: 'Date', type: 'numberStr' },
+		{ name: 'dstPath', displayName: 'Download Path' }
+	];
 
 	this.registerToIPC();
 }
@@ -25,7 +43,7 @@ MainWinCtrl.prototype.registerToIPC = function() {
 MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	// group files by date and create the file models
 	this.files = [];
-	var fileDates = {};
+	var fileDates = {}; // Helper for creating a distinct list of dates
 	for (var i = 0; i < files.length; ++i) {
 		var f = files[i];
 
@@ -37,7 +55,11 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 		this.files.push(new FileModel(fileDate, f.name, f.size, f.lastModified));
 	}
 
-	this.fileDates = Object.keys(fileDates);
+	// Convert the dates dictionary into array of objects (for the grid).
+	this.fileDates = Object.keys(fileDates).map(function(date) {return {date: date};});
+	this.datesGridOps.data = this.fileDates;
+
+	this.filesGridOpts.data = this.files;
 
 	// We are in IPC cb, need to digest
 	ngUtils.safeApply(this.scope);
@@ -51,4 +73,5 @@ function FileModel(group, name, size, mdate) {
 	this.name = name || '';
 	this.size = size || 0;
 	this.mdate = util.isDate(mdate) ? mdate.toLocaleString() : '';
+	this.dstPath = '';
 }

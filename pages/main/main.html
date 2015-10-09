@@ -1,21 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="mainWinApp">
 <head>
-    <meta charset="UTF-8">
-    <script src="main-view-controller.js"></script>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="../../node_modules/angular-ui-grid/ui-grid.css">
+	<script src="main-view-controller.js"></script>
+	<script src="../../node_modules/angular-ui-grid/ui-grid.js"></script>
 </head>
 <body>
-<div ng-controller="mainWinCtrl as ctrl">
-    <select multiple>
-        <option ng-repeat="date in ctrl.fileDates">
-            {{date}}
-        </option>
-    </select>
-    <select multiple>
-        <option ng-repeat="file in ctrl.files">
-            {{file.name}} {{file.mdate}}
-        </option>
-    </select>
-</div>
+	<div ng-controller="mainWinCtrl as ctrl">
+		<div ui-grid="ctrl.datesGridOps" ui-grid-selection class="grid"></div>
+		<div ui-grid="ctrl.filesGridOpts" ui-grid-selection class="grid"></div>
+	</div>
 </body>
 </html>

@@ -20,6 +20,8 @@
   },
   "homepage": "https://github.com/ValYouW/PhotoImp",
   "dependencies": {
+    "angular": "^1.4.7",
+    "angular-ui-grid": "^3.0.7",
     "electron-debug": "^0.2.1"
   }
 }
