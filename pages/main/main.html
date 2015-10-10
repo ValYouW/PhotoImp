@@ -3,13 +3,20 @@
 <head>
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="../../node_modules/angular-ui-grid/ui-grid.css">
-	<script src="main.html.js"></script>
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<script src="main.js"></script>
 	<script src="../../node_modules/angular-ui-grid/ui-grid.js"></script>
 </head>
 <body>
-	<div ng-controller="mainWinCtrl as ctrl">
-		<div ui-grid="ctrl.datesGridOps" ui-grid-selection class="grid"></div>
-		<div ui-grid="ctrl.filesGridOpts" ui-grid-selection class="grid"></div>
+	<div ng-controller="mainWinCtrl as ctrl" class="main">
+		<div class="gridsWrapper">
+			<div ui-grid="ctrl.datesGridOps" ui-grid-selection class="mainGrid datesGrid"></div>
+			<div ui-grid="ctrl.filesGridOpts" ui-grid-selection class="mainGrid filesGrid"></div>
+		</div>
+		<div class="statusWrapper">
+			<input type="button" value="Download" ng-click="ctrl.download()" ng-disabled="ctrl.files.length < 1">
+			<span>{{ctrl.files.length}} Files...</span>
+		</div>
 	</div>
 </body>
 </html>

@@ -1,23 +1,21 @@
 var CONSTANTS = require('../../common/constants.js'),
+	config = require('../../common/config.js'),
 	BrowserWindow = require('browser-window'),
 	settingsCtrl = require('../settings/settings-controller.js'),
 	dialog = require('dialog'),
 	Menu = require('menu'),
-	File = require('../../common/file.js'),
+	Model = require('../../common/model.js'),
 	path = require('path'),
 	app = require('app'),
+	ipc = require('ipc'),
 	fs = require('fs');
 
-var IS_IMG_REGEX = new RegExp('.*\.(' + CONSTANTS.DEFAULTS.FILE_TYPES.join('|') + ')$', 'i');
-
-function fileComperator(f1, f2) {
-	if (f1.lastModified < f2.lastModified) {return -1;}
-	if (f1.lastModified > f2.lastModified) {return 1;}
-	return 0;
-}
+var fileTypes = config.get(config.Keys.FileTypes) || [];
+var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
 
 function MainController() {
 	this.window = null;
+	ipc.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
 }
 
 MainController.prototype.show = function () {
@@ -35,18 +33,18 @@ MainController.prototype.show = function () {
 			submenu: [
 				{
 					label: 'Open...',
-					click: this.onOpenClick.bind(this)
+					click: this.onMnuOpenClick.bind(this)
 				},
 				{
 					label: 'Settings...',
-					click: this.onSettingsClick.bind(this)
+					click: this.onMnuSettingsClick.bind(this)
 				},
 				{
 					type: 'separator'
 				},
 				{
 					label: 'Quit',
-					click: this.onQuitClick.bind(this)
+					click: this.onMnuQuitClick.bind(this)
 				}
 			]
 		}
@@ -67,13 +65,13 @@ MainController.prototype.loadImages = function(folder) {
 		files = files.map(function cbFilterFile(file) {
 			var stat = fs.lstatSync(path.join(folder, file));
 			if (!stat || !stat.isFile()) { return null; }
-			if (IS_IMG_REGEX.test(file)) { return new File(file, stat.size || stat.blocks, stat.mtime); }
+			if (IS_IMG_REGEX.test(file)) { return new Model.File(file, stat.size || stat.blocks, stat.mtime); }
 
 			// This file extension should be ignored, save the extension in the hash
 			var m = file.match(/.*\.(.*)$/);
 			if (m) { filteredExts[m[1]] = true; }
 			return null;
-		}).filter(function(i){ return i;}).sort(fileComperator);
+		}).filter(function(i){ return i;});
 
 		var ignoredExts = Object.keys(filteredExts);
 		if (ignoredExts.length > 0) {
@@ -87,11 +85,16 @@ MainController.prototype.loadImages = function(folder) {
 			});
 		}
 
-		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, files);
+		var data = Model.File.serializeArray(files);
+		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, data);
 	}.bind(this));
 };
 
-MainController.prototype.onOpenClick = function() {
+MainController.prototype.onDownloadRequest = function(files) {
+
+};
+
+MainController.prototype.onMnuOpenClick = function() {
 	var dir = dialog.showOpenDialog(this.window, {
 		title: 'Select source directory',
 		properties: ['openDirectory']
@@ -101,8 +104,7 @@ MainController.prototype.onOpenClick = function() {
 		this.loadImages(dir[0]);
 	}
 };
-
-MainController.prototype.onSettingsClick = function() {
+MainController.prototype.onMnuSettingsClick = function() {
 	if (this.settingsWin) {
 		this.settingsWin.focus();
 		return;
@@ -113,7 +115,7 @@ MainController.prototype.onSettingsClick = function() {
 		this.settingsWin = null;
 	}.bind(this));
 };
-MainController.prototype.onQuitClick = function() {
+MainController.prototype.onMnuQuitClick = function() {
 	app.quit();
 };
 

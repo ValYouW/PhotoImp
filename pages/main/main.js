@@ -1,14 +1,16 @@
 var CONSTANTS = require('../../common/constants.js'),
+	Model = require('../../common/model.js'),
 	util = require('util'),
 	ipc = require('ipc'),
 	angular = require('angular'),
 	ngUtils = require('../ng-utils.js');
 
-var ngApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection']);
+var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns']);
 
 function MainWinCtrl(scope, uiGridConstants) {
-	this.fileDates = [];
+	/** @type {Model.File[]} */
 	this.files = [];
+	this.fileDates = [];
 	this.scope = scope;
 
 	this.datesGridOps = {};
@@ -18,13 +20,13 @@ function MainWinCtrl(scope, uiGridConstants) {
 
 	// The dates grid columns
 	this.datesGridOps.columnDefs = [
-		{ name: 'date', type: 'date', cellFilter: 'localeDateTime:true' }
+		{ name: 'date', type: 'date', cellFilter: 'localeDateTime:true', enableColumnResizing: false }
 	];
 
 	// The files grid columns
 	this.filesGridOpts.columnDefs = [
 		{ name: 'name' },
-		{ name: 'size', type: 'number' },
+		{ name: 'size', type: 'number', cellFilter: 'bytes2KB' },
 		{ name: 'mdate', displayName: 'Date', type: 'date', cellFilter: 'localeDateTime'},
 		{ name: 'dstPath', displayName: 'Download Path' }
 	];
@@ -32,7 +34,7 @@ function MainWinCtrl(scope, uiGridConstants) {
 	this.registerToIPC();
 }
 MainWinCtrl.$inject = ['$scope', 'uiGridConstants'];
-ngApp.controller('mainWinCtrl', MainWinCtrl);
+mainApp.controller('mainWinCtrl', MainWinCtrl);
 
 MainWinCtrl.prototype.registerToIPC = function() {
 	ipc.on(CONSTANTS.IPC.LOAD_FILE_LIST, this.onLoadFilesRequest.bind(this));
@@ -43,18 +45,13 @@ MainWinCtrl.prototype.registerToIPC = function() {
  * @param {File[]} files
  */
 MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
-	// group files by date and create the file models
-	this.files = [];
+	this.files = Model.File.deserializeArray(files) || [];
 	var distinctDates = {}; // Helper for creating a distinct list of dates
-	for (var i = 0; i < files.length; ++i) {
-		var f = files[i];
-
-		// Convert lastModified to date
-		f.lastModified = new Date(f.lastModified || 0);
+	for (var i = 0; i < this.files.length; ++i) {
+		var f = this.files[i];
 
 		var fileDate = f.lastModified.toLocaleDateString();
 		distinctDates[fileDate] = f.lastModified;
-		this.files.push(new FileModel(fileDate, f.name, f.size, f.lastModified));
 	}
 
 	// Convert the dates dictionary into array of objects (for the grid).
@@ -67,7 +64,11 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	ngUtils.safeApply(this.scope);
 };
 
-ngApp.filter('localeDateTime', function() {
+MainWinCtrl.prototype.download = function() {
+	ipc.send(CONSTANTS.IPC.DOWNLOAD, this.files);
+};
+
+mainApp.filter('localeDateTime', function() {
 	return function(input, dateOnly) {
 		if (!input || !util.isDate(input)) {
 			return '';
@@ -77,10 +78,13 @@ ngApp.filter('localeDateTime', function() {
 	};
 });
 
-function FileModel(group, name, size, mdate) {
-	this.dateGroup = group || '';
-	this.name = name || '';
-	this.size = size || 0;
-	this.mdate = util.isDate(mdate) ? mdate : new Date(0);
-	this.dstPath = '';
-}
+mainApp.filter('bytes2KB', function() {
+	return function(input) {
+		var size = Number(input);
+		if (isNaN(size)) {
+			return '';
+		} else {
+			return parseInt(size / 1024) + 'KB';
+		}
+	};
+});
