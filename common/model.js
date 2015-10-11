@@ -1,5 +1,8 @@
 var util = require('util');
 
+var Model = {};
+module.exports = Model;
+
 /**
  * Represents a file
  * @param {string} name - The file name
@@ -10,7 +13,7 @@ var util = require('util');
 function File(name, size, mdate) {
 	this.name = name || '';
 	this.size = size || 0;
-	this.lastModified = util.isDate(mdate) ? mdate.getTime() : 0;
+	this.lastModified = util.isDate(mdate) ? mdate : new Date(0);
 	this.srcPath = '';
 	this.dstPath = '';
 }
@@ -46,4 +49,4 @@ File.deserializeArray = function(files) {
 	return files;
 };
 
-module.exports.File = File;
+Model.File = File;

@@ -11,6 +11,7 @@ var CONSTANTS = require('../../common/constants.js'),
 	fs = require('fs');
 
 var fileTypes = config.get(config.Keys.FileTypes) || [];
+var downloadPath = config.get(config.Keys.DownloadPath);
 var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
 
 function MainController() {
@@ -55,24 +56,37 @@ MainController.prototype.show = function () {
 };
 
 MainController.prototype.loadImages = function(folder) {
-	fs.readdir(folder, function cbReadDir(err, files) {
+	fs.readdir(folder, function cbReadDir(err, fileNames) {
 		if (err) {
 			dialog.showErrorBox('Ooops', 'Error while trying to read files');
 			return;
 		}
 
-		var filteredExts = {};
-		files = files.map(function cbFilterFile(file) {
-			var stat = fs.lstatSync(path.join(folder, file));
-			if (!stat || !stat.isFile()) { return null; }
-			if (IS_IMG_REGEX.test(file)) { return new Model.File(file, stat.size || stat.blocks, stat.mtime); }
+		var filteredExts = {}; // Will hold all file extensions that we didn't recognize as image
+		var loadedFiles = [];
+		for(var i = 0; i < fileNames.length; ++i) {
+			var fileName = fileNames[i];
+			var srcPath = path.join(folder, fileName);
+			var stat = fs.lstatSync(srcPath);
+			if (!stat || !stat.isFile()) {
+				continue;
+			}
+
+			// Check if this is an image file, if so create the file model
+			if (IS_IMG_REGEX.test(fileName)) {
+				var fileModel =  new Model.File(fileName, stat.size || stat.blocks, stat.mtime);
+				fileModel.srcPath = srcPath;
+				fileModel.dstPath = this.getDstPath(fileModel);
+				loadedFiles.push(fileModel);
+				continue;
+			}
 
 			// This file extension should be ignored, save the extension in the hash
-			var m = file.match(/.*\.(.*)$/);
+			var m = fileName.match(/.*\.(.*)$/);
 			if (m) { filteredExts[m[1]] = true; }
-			return null;
-		}).filter(function(i){ return i;});
+		}
 
+		// If there are some extensions we ignored show a message to the user
 		var ignoredExts = Object.keys(filteredExts);
 		if (ignoredExts.length > 0) {
 			dialog.showMessageBox(this.window, {
@@ -85,9 +99,20 @@ MainController.prototype.loadImages = function(folder) {
 			});
 		}
 
-		var data = Model.File.serializeArray(files);
+		var data = Model.File.serializeArray(loadedFiles);
 		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, data);
 	}.bind(this));
+};
+
+/**
+ * Sets the download destination path for the file
+ * @param {Model.File} file - The target file
+ * @returns {string}
+ * @private
+ */
+MainController.prototype.getDstPath = function(file) {
+	// todo: calc the real download path based on patterns
+	return path.join(downloadPath, file.name);
 };
 
 MainController.prototype.onDownloadRequest = function(files) {
@@ -104,6 +129,7 @@ MainController.prototype.onMnuOpenClick = function() {
 		this.loadImages(dir[0]);
 	}
 };
+
 MainController.prototype.onMnuSettingsClick = function() {
 	if (this.settingsWin) {
 		this.settingsWin.focus();
@@ -115,6 +141,7 @@ MainController.prototype.onMnuSettingsClick = function() {
 		this.settingsWin = null;
 	}.bind(this));
 };
+
 MainController.prototype.onMnuQuitClick = function() {
 	app.quit();
 };

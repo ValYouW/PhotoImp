@@ -8,6 +8,7 @@ var CONSTANTS = require('../../common/constants.js'),
 var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns']);
 
 function MainWinCtrl(scope, uiGridConstants) {
+	var self = this;
 	/** @type {Model.File[]} */
 	this.files = [];
 	this.fileDates = [];
@@ -20,16 +21,39 @@ function MainWinCtrl(scope, uiGridConstants) {
 
 	// The dates grid columns
 	this.datesGridOps.columnDefs = [
-		{ name: 'date', type: 'date', cellFilter: 'localeDateTime:true', enableColumnResizing: false }
+		{ name: 'lastModified', type: 'date', cellFilter: 'localeDateTime:true', enableColumnResizing: false }
 	];
+	this.datesGridOps.enableSelectionBatchEvent = false;
+
+	// rowSelectionChangedBatch
+	this.datesGridOps.onRegisterApi = function(gridApi) {
+		self.datesGridApi = gridApi;
+
+		gridApi.selection.on.rowSelectionChanged(self.scope, function cbSelChanged(row) {
+			if (!row.entity || !row.entity.date) { return; }
+			var date = row.entity.date;
+			for (var i = 0; i < self.files.length; ++i) {
+				if (self.files[i].date !== date) { continue; }
+				if (row.isSelected) {
+					self.filesGridApi.selection.selectRow(self.files[i]);
+				} else {
+					self.filesGridApi.selection.unSelectRow(self.files[i]);
+				}
+			}
+		});
+	};
 
 	// The files grid columns
 	this.filesGridOpts.columnDefs = [
 		{ name: 'name' },
 		{ name: 'size', type: 'number', cellFilter: 'bytes2KB' },
-		{ name: 'mdate', displayName: 'Date', type: 'date', cellFilter: 'localeDateTime'},
+		{ name: 'lastModified', displayName: 'Date', type: 'date', cellFilter: 'localeDateTime'},
 		{ name: 'dstPath', displayName: 'Download Path' }
 	];
+
+	this.filesGridOpts.onRegisterApi = function(gridApi) {
+		self.filesGridApi = gridApi;
+	};
 
 	this.registerToIPC();
 }
@@ -50,12 +74,18 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	for (var i = 0; i < this.files.length; ++i) {
 		var f = this.files[i];
 
-		var fileDate = f.lastModified.toLocaleDateString();
-		distinctDates[fileDate] = f.lastModified;
+		// Add a "date" property to the file, will be used when we would like to select all files of
+		// a specific date
+		f.date = f.lastModified.toLocaleDateString();
+
+		if (!distinctDates[f.date]) {
+			// Add a date also to this object (for the datesGrid), will be used to select all files of this date
+			distinctDates[f.date] = {lastModified: f.lastModified, date: f.date};
+		}
 	}
 
 	// Convert the dates dictionary into array of objects (for the grid).
-	this.fileDates = Object.keys(distinctDates).map(function(date) {return {date: distinctDates[date]};});
+	this.fileDates = Object.keys(distinctDates).map(function(date) {return distinctDates[date];});
 	this.datesGridOps.data = this.fileDates;
 
 	this.filesGridOpts.data = this.files;
