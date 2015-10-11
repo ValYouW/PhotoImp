@@ -115,8 +115,22 @@ MainController.prototype.getDstPath = function(file) {
 	return path.join(downloadPath, file.name);
 };
 
-MainController.prototype.onDownloadRequest = function(files) {
+MainController.prototype.onDownloadRequest = function(sender, files) {
+	files = Model.File.deserializeArray(files);
+	console.log(files);
+	var file = files[0];
 
+	var reader = fs.createReadStream(file.srcPath);
+	var writer = fs.createWriteStream(file.dstPath);
+	writer.on('pipe', function(src) {
+		console.log(writer.bytesWritten);
+	});
+
+	writer.on('finish', function() {
+		console.log('Done');
+	});
+
+	reader.pipe(writer);
 };
 
 MainController.prototype.onMnuOpenClick = function() {

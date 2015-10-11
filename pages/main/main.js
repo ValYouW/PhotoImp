@@ -95,7 +95,13 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 };
 
 MainWinCtrl.prototype.download = function() {
-	ipc.send(CONSTANTS.IPC.DOWNLOAD, this.files);
+	// Get all the selected files, if no file is selected then we download all.
+	var selected = this.filesGridApi.selection.getSelectedRows();
+	if (selected.length < 1) {
+		selected = this.files;
+	}
+
+	ipc.send(CONSTANTS.IPC.DOWNLOAD, Model.File.serializeArray(selected));
 };
 
 mainApp.filter('localeDateTime', function() {
