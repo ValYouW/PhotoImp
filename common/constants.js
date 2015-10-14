@@ -13,7 +13,8 @@ module.exports = {
 	},
 	IPC: {
 		LOAD_FILE_LIST: 'LOAD_FILE_LIST',
-		DOWNLOAD: 'DOWNLOAD'
+		DOWNLOAD: 'DOWNLOAD',
+		COPY_PROGRESS: 'COPY_PROGRESS'
 	}
 };
 

@@ -18,6 +18,11 @@ function File(name, size, mdate) {
 	this.dstPath = '';
 }
 
+/**
+ * Serializes an array of files
+ * @param {Model.File[]} files - An array of files to serialize
+ * @returns {string}
+ */
 File.serializeArray = function(files) {
 	if (!util.isArray(files)) {
 		throw new Error('files must be an array');
@@ -26,6 +31,11 @@ File.serializeArray = function(files) {
 	return JSON.stringify(files);
 };
 
+/**
+ * Deserialize files array
+ * @param {string} files - A serialized array of files
+ * @returns {Model.File[]}
+ */
 File.deserializeArray = function(files) {
 	try {
 		files = JSON.parse(files);

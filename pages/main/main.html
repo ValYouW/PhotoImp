@@ -4,8 +4,10 @@
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="../../node_modules/angular-ui-grid/ui-grid.css">
 	<link rel="stylesheet" type="text/css" href="main.css">
+	<link rel="stylesheet" href="../../3rd-party/ngProgress/ngprogress.css">
 	<script src="main.js"></script>
 	<script src="../../node_modules/angular-ui-grid/ui-grid.js"></script>
+	<script src="../../3rd-party/ngProgress/ngprogress.js"></script>
 </head>
 <body>
 	<div ng-controller="mainWinCtrl as ctrl" class="main">
@@ -15,7 +17,8 @@
 		</div>
 		<div class="statusWrapper">
 			<input type="button" value="Download" ng-click="ctrl.download()" ng-disabled="ctrl.files.length < 1">
-			<span ng-hide="ctrl.files.length < 1">{{ctrl.files.length}} files found</span>
+			<span ng-hide="ctrl.files.length < 1 || ctrl.copyProgress.inprogress">{{ctrl.files.length}} files found</span>
+			<span ng-hide="!ctrl.copyProgress.inprogress">Copying: {{ctrl.copyProgress.file}}</span>
 		</div>
 	</div>
 </body>

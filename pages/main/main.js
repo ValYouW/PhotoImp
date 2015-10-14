@@ -5,14 +5,17 @@ var CONSTANTS = require('../../common/constants.js'),
 	angular = require('angular'),
 	ngUtils = require('../ng-utils.js');
 
-var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns']);
+var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns', 'ngProgress']);
 
-function MainWinCtrl(scope, uiGridConstants) {
+function MainWinCtrl(scope, ngProgressFactory) {
 	var self = this;
 	/** @type {Model.File[]} */
 	this.files = [];
 	this.fileDates = [];
+	this.copyProgress = {inprogress: false, file: '', percentage: 0};
 	this.scope = scope;
+
+	this.progressbar = ngProgressFactory.createInstance();
 
 	this.datesGridOps = {};
 	this.filesGridOpts = {};
@@ -57,11 +60,12 @@ function MainWinCtrl(scope, uiGridConstants) {
 
 	this.registerToIPC();
 }
-MainWinCtrl.$inject = ['$scope', 'uiGridConstants'];
+MainWinCtrl.$inject = ['$scope', 'ngProgressFactory'];
 mainApp.controller('mainWinCtrl', MainWinCtrl);
 
 MainWinCtrl.prototype.registerToIPC = function() {
 	ipc.on(CONSTANTS.IPC.LOAD_FILE_LIST, this.onLoadFilesRequest.bind(this));
+	ipc.on(CONSTANTS.IPC.COPY_PROGRESS, this.onCopyProgress.bind(this));
 };
 
 /**
@@ -89,6 +93,22 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	this.datesGridOps.data = this.fileDates;
 
 	this.filesGridOpts.data = this.files;
+
+	// We are in IPC cb, need to digest
+	ngUtils.safeApply(this.scope);
+};
+
+MainWinCtrl.prototype.onCopyProgress = function(data) {
+	var pct = data.percentage*100;
+	this.copyProgress.inprogress = pct < 100;
+	this.copyProgress.file = data.file;
+	this.copyProgress.percentage = data.percentage;
+
+	if (pct < 100) {
+		this.progressbar.set(pct);
+	} else {
+		this.progressbar.complete();
+	}
 
 	// We are in IPC cb, need to digest
 	ngUtils.safeApply(this.scope);

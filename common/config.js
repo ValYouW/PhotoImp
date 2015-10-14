@@ -2,7 +2,7 @@ var config = {
 	fileTypes: ['jpg', 'jpeg', 'tif', 'tiff', 'gif', 'png', 'bmp',
 		'IIQ', '3FR', 'DCR', 'K25', 'KDC', 'CR2', 'ERF', 'MEF', 'MOS', 'NEF', 'ORF', 'PEF', 'RW2', 'ARW', 'SRF', 'SR2',
 		'mov', 'mp4', 'm4v', 'avi'],
-	downloadPath: require('path').join(require('os-homedir')(), 'pictures')
+	downloadPath: require('path').join(require('os-homedir')(), 'pictures', 'test')
 };
 
 var Config = {};
