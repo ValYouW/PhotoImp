@@ -5,17 +5,15 @@ var CONSTANTS = require('../../common/constants.js'),
 	angular = require('angular'),
 	ngUtils = require('../ng-utils.js');
 
-var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns', 'ngProgress']);
+var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns']);
 
-function MainWinCtrl(scope, ngProgressFactory) {
+function MainWinCtrl(scope) {
 	var self = this;
 	/** @type {Model.File[]} */
 	this.files = [];
 	this.fileDates = [];
 	this.copyProgress = {inprogress: false, file: '', percentage: 0};
 	this.scope = scope;
-
-	this.progressbar = ngProgressFactory.createInstance();
 
 	this.datesGridOps = {};
 	this.filesGridOpts = {};
@@ -58,9 +56,13 @@ function MainWinCtrl(scope, ngProgressFactory) {
 		self.filesGridApi = gridApi;
 	};
 
+	this.progressbarOptions = {
+		onRegisterApi: function(api) {self.progressbar = api;}
+	};
+
 	this.registerToIPC();
 }
-MainWinCtrl.$inject = ['$scope', 'ngProgressFactory'];
+MainWinCtrl.$inject = ['$scope'];
 mainApp.controller('mainWinCtrl', MainWinCtrl);
 
 MainWinCtrl.prototype.registerToIPC = function() {
@@ -144,3 +146,45 @@ mainApp.filter('bytes2KB', function() {
 		}
 	};
 });
+
+mainApp.directive('simpleProgress', ['$document', function($document) {
+	return {
+		// Replace the directive
+		replace: true,
+		// Only use as a element
+		restrict: 'E',
+		scope: {
+			options: '='
+		},
+		link: function (scope) {
+			var body = $document.find('body');
+			var elem = angular.element('<div></div>');
+			elem.css('display', 'none');
+			elem.css('height', '0');
+			elem.css('width', '0%');
+			body.prepend(elem);
+
+			var visible = false;
+			if (typeof scope.options === 'object' && typeof scope.options.onRegisterApi === 'function') {
+				scope.options.onRegisterApi({
+					set: function(pct) {
+						var n = parseInt(pct);
+						if (isNaN(n)) {return;}
+
+						if (n === 0) {return;}
+						if (!visible) {
+							elem.css('display', 'block');
+							visible = true;
+						}
+
+						elem.css('width', pct + '%');
+					},
+					complete: function() {
+						elem.css('display', 'none');
+						visible = false;
+					}
+				});
+			}
+		}
+	};
+}]);

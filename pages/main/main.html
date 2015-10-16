@@ -4,13 +4,12 @@
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="../../node_modules/angular-ui-grid/ui-grid.css">
 	<link rel="stylesheet" type="text/css" href="main.css">
-	<link rel="stylesheet" href="../../3rd-party/ngProgress/ngprogress.css">
 	<script src="main.js"></script>
 	<script src="../../node_modules/angular-ui-grid/ui-grid.js"></script>
-	<script src="../../3rd-party/ngProgress/ngprogress.js"></script>
 </head>
 <body>
 	<div ng-controller="mainWinCtrl as ctrl" class="main">
+		<simple-progress data-options="ctrl.progressbarOptions"></simple-progress>
 		<div class="gridsWrapper">
 			<div ui-grid="ctrl.datesGridOps" ui-grid-selection class="mainGrid datesGrid"></div>
 			<div ui-grid="ctrl.filesGridOpts" ui-grid-selection class="mainGrid filesGrid"></div>
