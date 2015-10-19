@@ -158,10 +158,7 @@ mainApp.directive('simpleProgress', ['$document', function($document) {
 		},
 		link: function (scope) {
 			var body = $document.find('body');
-			var elem = angular.element('<div></div>');
-			elem.css('display', 'none');
-			elem.css('height', '0');
-			elem.css('width', '0%');
+			var elem = angular.element('<div class="progress hidden"></div>');
 			body.prepend(elem);
 
 			var visible = false;
@@ -173,14 +170,15 @@ mainApp.directive('simpleProgress', ['$document', function($document) {
 
 						if (n === 0) {return;}
 						if (!visible) {
-							elem.css('display', 'block');
+							elem.toggleClass('visible hidden');
 							visible = true;
 						}
 
 						elem.css('width', pct + '%');
 					},
 					complete: function() {
-						elem.css('display', 'none');
+						elem.css('width', '100%');
+						elem.toggleClass('visible hidden');
 						visible = false;
 					}
 				});

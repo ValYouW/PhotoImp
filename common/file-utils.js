@@ -31,6 +31,7 @@ function copyFile(file, cb) {
 		// Copy the file
 		err = '';
 		try {
+			// Use copySync as async copy is extremely slow
 			fse.copySync(file.srcPath, file.dstPath, {preserveTimestamps: true});
 		} catch (ignore) {
 			err = 'Error downloading file: ' + file.srcPath;
@@ -116,7 +117,8 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 
 			// Move to the next file if there are any
 			if (++i < files.length) {
-				copyNext(files[i]);
+				// Since we do copySync we need to free the event-loop between files
+				setTimeout(copyNext, 5, files[i]);
 			} else {
 				cbDone();
 			}
