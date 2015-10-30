@@ -24,7 +24,7 @@ MainController.prototype.show = function () {
 		width: 800,
 		height: 600,
 		resizable: true,
-		title: 'PhotoImp by ValYouW'
+		title: 'PhotoImp'
 	});
 
 	var menu = Menu.buildFromTemplate([
