@@ -1,17 +1,21 @@
-var BrowserWindow = require('browser-window'),
+var CONSTANTS = require('../../common/constants.js'),
+	BrowserWindow = require('browser-window'),
 	Emitter = require('events').EventEmitter,
-	util = require('util');
+	dialog = require('dialog'),
+	util = require('util'),
+	ipc = require('ipc');
 
 function SettingsController() {
 	Emitter.call(this);
 	this.window = null;
+	ipc.on(CONSTANTS.IPC.OPEN_DIR_DIALOG, this.onOpenDialogRequest.bind(this));
 }
 util.inherits(SettingsController, Emitter);
 
 SettingsController.prototype.show = function () {
 	this.window = new BrowserWindow({
 		width: 400,
-		height: 300,
+		height: 400,
 		resizable: true,
 		title: 'Settings'
 	});
@@ -31,6 +35,17 @@ SettingsController.prototype.focus = function() {
 SettingsController.prototype.onClosed = function() {
 	this.window = null;
 	this.emit('closed');
+};
+
+SettingsController.prototype.onOpenDialogRequest = function() {
+	var dir = dialog.showOpenDialog(this.window, {
+		title: 'Select download directory',
+		properties: ['openDirectory']
+	});
+
+	if (dir && dir.length > 0) {
+		this.window.webContents.send(CONSTANTS.IPC.DOWNLOAD_DIR_CHANGED, dir[0]);
+	}
 };
 
 var instance = new SettingsController();

@@ -1,10 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="settingsWinApp">
 <head>
     <meta charset="UTF-8">
-    <title>PhotoImp by ValYouW</title>
+    <link rel="stylesheet" type="text/css" href="settings.css">
+    <script src="settings.js"></script>
 </head>
 <body>
-Settings !!
+    <div ng-controller="settingsWinCtrl as ctrl" class="main">
+	    <label for="txtDownDir">Download directory:</label>
+	    <div class="inputPair">
+		    <input id="txtDownDir" type="text" ng-model="ctrl.settings.downloadDir">
+		    <button ng-click="ctrl.chooseDir()">...</button>
+	    </div>
+	    <div class="inputPair">
+		    <label for="txtDownFile">Filename:</label>
+		    <input id="txtDownFile" type="text" ng-model="ctrl.settings.downloadFile">
+	    </div>
+    </div>
 </body>
 </html>
