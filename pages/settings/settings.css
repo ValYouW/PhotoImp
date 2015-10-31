@@ -7,6 +7,14 @@ body {
     height: 100%;
 }
 
+.row {
+    margin-bottom: 10px;
+}
+
+.title {
+    font-weight: bold;
+}
+
 .main {
     display: flex;
     flex-direction: column;
@@ -16,7 +24,6 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-bottom: 10px;
 }
 
 .inputPair label {
@@ -29,4 +36,9 @@ body {
 
 .inputPair button {
     margin-left: 2px;
+}
+
+.grayedTextbox {
+    border: solid 1px gray;
+    padding: 3px;
 }

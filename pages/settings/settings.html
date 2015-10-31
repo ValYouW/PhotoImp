@@ -8,14 +8,22 @@
 <body>
     <div ng-controller="settingsWinCtrl as ctrl" class="main">
 	    <label for="txtDownDir">Download directory:</label>
-	    <div class="inputPair">
+	    <div class="inputPair row">
 		    <input id="txtDownDir" type="text" ng-model="ctrl.settings.downloadDir">
 		    <button ng-click="ctrl.chooseDir()">...</button>
 	    </div>
-	    <div class="inputPair">
+	    <div class="inputPair row">
 		    <label for="txtDownFile">Filename:</label>
 		    <input id="txtDownFile" type="text" ng-model="ctrl.settings.downloadFile">
 	    </div>
+		<div class="title">Supported tokens:</div>
+		<div class="row">
+		<div ng-repeat="(key, value) in ctrl.formatters">
+			{{value.pattern}} - {{value.desc}}
+		</div>
+		</div>
+		<div class="title">Exapmle:</div>
+		<span class="grayedTextbox">{{ctrl.sampleFile|dstpath:ctrl.settings.downloadDir:ctrl.settings.downloadFile}}</span>
     </div>
 </body>
 </html>

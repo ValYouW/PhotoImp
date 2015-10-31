@@ -14,8 +14,8 @@ util.inherits(SettingsController, Emitter);
 
 SettingsController.prototype.show = function () {
 	this.window = new BrowserWindow({
-		width: 400,
-		height: 400,
+		width: 420,
+		height: 500,
 		resizable: true,
 		title: 'Settings'
 	});
