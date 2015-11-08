@@ -2,28 +2,44 @@
 <html lang="en" ng-app="settingsWinApp">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="settings.css">
-    <script src="settings.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../3rd-party/vtabs/v-tabs.min.css">
+	<link rel="stylesheet" type="text/css" href="settings.css">
+	<script src="settings.js"></script>
+	<script src="../../3rd-party/vtabs/v-tabs.min.js"></script>
 </head>
 <body>
-    <div ng-controller="settingsWinCtrl as ctrl" class="main">
-	    <label for="txtDownDir">Download directory:</label>
-	    <div class="inputPair row">
-		    <input id="txtDownDir" type="text" ng-model="ctrl.settings.downloadDir">
-		    <button ng-click="ctrl.chooseDir()">...</button>
-	    </div>
-	    <div class="inputPair row">
-		    <label for="txtDownFile">Filename:</label>
-		    <input id="txtDownFile" type="text" ng-model="ctrl.settings.downloadFile">
-	    </div>
-		<div class="title">Supported tokens:</div>
-		<div class="row">
-		<div ng-repeat="(key, value) in ctrl.formatters">
-			{{value.pattern}} - {{value.desc}}
-		</div>
-		</div>
-		<div class="title">Exapmle:</div>
-		<span class="grayedTextbox">{{ctrl.sampleFile|dstpath:ctrl.settings.downloadDir:ctrl.settings.downloadFile}}</span>
+    <div ng-controller="settingsWinCtrl as ctrl">
+		<v-tabs class="vTabs--default" horizontal control="ctrl.tabs" active="ctrl.tabs.active">
+			<v-tab>Download</v-tab>
+			<v-tab>Other</v-tab>
+		</v-tabs>
+		<v-pages class="main vPages--default" control="ctrl.tabs" active="ctrl.tabs.active">
+			<v-page>
+				<div class="main">
+					<label for="txtDownDir">Download directory:</label>
+					<div class="inputPair row">
+						<input id="txtDownDir" type="text" ng-model="ctrl.settings.downloadDir">
+						<button ng-click="ctrl.chooseDir()">...</button>
+					</div>
+					<div class="inputPair row">
+						<label for="txtDownFile">Filename:</label>
+						<input id="txtDownFile" type="text" ng-model="ctrl.settings.downloadFile">
+					</div>
+					<div class="title">Supported tokens:</div>
+					<div class="row">
+						<div ng-repeat="(key, value) in ctrl.formatters">
+							{{value.pattern}} - {{value.desc}}
+						</div>
+					</div>
+					<div class="title">Exapmle:</div>
+					<span class="grayedTextbox">{{ctrl.sampleFile|dstpath:ctrl.settings.downloadDir:ctrl.settings.downloadFile}}</span>
+				</div>
+			</v-page>
+			<v-page>
+				Other settings
+			</v-page>
+		</v-pages>
+		<button class="btnSave" ng-click="ctrl.save()">Save</button>
     </div>
 </body>
 </html>

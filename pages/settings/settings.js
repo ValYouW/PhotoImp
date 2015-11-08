@@ -7,13 +7,16 @@ var CONSTANTS = require('../../common/constants.js'),
 	ipc = require('ipc'),
 	angular = require('angular');
 
-var settingsApp = angular.module('settingsWinApp', []);
+var settingsApp = angular.module('settingsWinApp', ['vTabs']);
 
 function SettingsWinCtrl(scope) {
 	this.scope = scope;
 	this.settings = {
 		downloadDir: config.get(config.Keys.DownloadDirPattern),
 		downloadFile: config.get(config.Keys.DownloadFilePattern)
+	};
+	this.tabs = {
+		active: 0
 	};
 	this.formatters = fileFormatter.Formatters;
 	this.sampleFile = new Model.File('DSC_1234.jpg', 1000, new Date());
@@ -35,6 +38,10 @@ SettingsWinCtrl.prototype.onDownDirUpdate = function(newDir) {
 
 	// We are in IPC cb, need to digest
 	ngUtils.safeApply(this.scope);
+};
+
+SettingsWinCtrl.prototype.save = function() {
+	alert('fsdfd');
 };
 
 SettingsWinCtrl.$inject = ['$scope'];
