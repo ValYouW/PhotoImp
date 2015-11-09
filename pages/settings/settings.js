@@ -12,8 +12,8 @@ var settingsApp = angular.module('settingsWinApp', []);
 function SettingsWinCtrl(scope) {
 	this.scope = scope;
 	this.settings = {
-		downloadDir: config.get(config.Keys.DownloadPath),
-		downloadFile: '{o}'
+		downloadDir: config.get(config.Keys.DownloadDirPattern),
+		downloadFile: config.get(config.Keys.DownloadFilePattern)
 	};
 	this.formatters = fileFormatter.Formatters;
 	this.sampleFile = new Model.File('DSC_1234.jpg', 1000, new Date());
