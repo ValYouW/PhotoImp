@@ -6,15 +6,16 @@ var CONSTANTS = require('../../common/constants.js'),
 	dialog = require('dialog'),
 	Menu = require('menu'),
 	Model = require('../../common/model.js'),
+	path = require('path'),
 	app = require('app'),
 	ipc = require('ipc');
 
 var fileTypes = config.get(config.Keys.FileTypes) || [];
-var downloadPath = config.get(config.Keys.DownloadDirPattern);
 var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
 
 function MainController() {
 	this.window = null;
+	this.selectedFolder = '';
 	ipc.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
 }
 
@@ -59,7 +60,8 @@ MainController.prototype.show = function () {
  * @param {string} folder - The source folder
  */
 MainController.prototype.loadImages = function(folder) {
-	fileUtils.getFiles(folder, IS_IMG_REGEX, downloadPath, function cbGetFiles(err, data) {
+	var downloadPathPattern = path.join(config.get(config.Keys.DownloadDirPattern), config.get(config.Keys.DownloadFilePattern));
+	fileUtils.getFiles(folder, IS_IMG_REGEX, downloadPathPattern, function cbGetFiles(err, data) {
 		if (err) {
 			dialog.showErrorBox('Ooops', 'Error while trying to read files');
 			return;
@@ -77,6 +79,7 @@ MainController.prototype.loadImages = function(folder) {
 			});
 		}
 
+		this.selectedFolder = folder;
 		var files = Model.File.serializeArray(data.files);
 		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, files);
 	}.bind(this));
@@ -107,11 +110,13 @@ MainController.prototype.onDownloadRequest = function(sender, params) {
 		self.window.webContents.send(CONSTANTS.IPC.COPY_PROGRESS, data);
 	}
 
-	function cbDoneCopy() {
-		console.log('Done!!!');
+	function cbDoneCopy(aborted) {
+		if (aborted) {
+			self.window.webContents.send(CONSTANTS.IPC.COPY_PROGRESS, 1);
+		}
 	}
 
-	fileUtils.copyFiles(files, cbCopyError, cbCopyProgress, cbDoneCopy);
+	var abortFn = fileUtils.copyFiles(files, cbCopyError, cbCopyProgress, cbDoneCopy);
 };
 
 MainController.prototype.onMnuOpenClick = function() {
@@ -134,6 +139,7 @@ MainController.prototype.onMnuSettingsClick = function() {
 	this.settingsWin = settingsCtrl.show();
 	this.settingsWin.on('closed', function() {
 		this.settingsWin = null;
+		this.loadImages(this.selectedFolder);
 	}.bind(this));
 };
 

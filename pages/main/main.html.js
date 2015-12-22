@@ -80,8 +80,7 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	for (var i = 0; i < this.files.length; ++i) {
 		var f = this.files[i];
 
-		// Add a "date" property to the file, will be used when we would like to select all files of
-		// a specific date
+		// Add a "date" property to the file, will be used when we would like to select all files of a specific date
 		f.date = f.lastModified.toLocaleDateString();
 
 		if (!distinctDates[f.date]) {
