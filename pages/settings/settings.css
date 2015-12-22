@@ -39,6 +39,12 @@ body {
 }
 
 .grayedTextbox {
+    display: block;
     border: solid 1px gray;
     padding: 3px;
+}
+
+.toolbar button {
+    float: right;
+    margin-left: 5px;
 }

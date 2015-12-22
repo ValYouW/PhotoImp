@@ -9,8 +9,9 @@ var CONSTANTS = require('../../common/constants.js'),
 
 var settingsApp = angular.module('settingsWinApp', []);
 
-function SettingsWinCtrl(scope) {
+function SettingsWinCtrl(scope, window) {
 	this.scope = scope;
+	this.window = window;
 	this.settings = {
 		downloadDir: config.get(config.Keys.DownloadDirPattern),
 		downloadFile: config.get(config.Keys.DownloadFilePattern)
@@ -20,14 +21,24 @@ function SettingsWinCtrl(scope) {
 	this.registerToIPC();
 }
 
+/**
+ * Register to events from the main process
+ */
 SettingsWinCtrl.prototype.registerToIPC = function() {
 	ipc.on(CONSTANTS.IPC.DOWNLOAD_DIR_CHANGED, this.onDownDirUpdate.bind(this));
 };
 
+/**
+ * Handles the click on the choose directory button
+ */
 SettingsWinCtrl.prototype.chooseDir = function() {
 	ipc.send(CONSTANTS.IPC.OPEN_DIR_DIALOG);
 };
 
+/**
+ * Fires when the download directory has changed
+ * @param {string} newDir - The new download directory path
+ */
 SettingsWinCtrl.prototype.onDownDirUpdate = function(newDir) {
 	if (!newDir) {return;}
 
@@ -37,7 +48,24 @@ SettingsWinCtrl.prototype.onDownDirUpdate = function(newDir) {
 	ngUtils.safeApply(this.scope);
 };
 
-SettingsWinCtrl.$inject = ['$scope'];
+/**
+ * Handles the save button
+ */
+SettingsWinCtrl.prototype.save = function() {
+	config.set(config.Keys.DownloadDirPattern, this.settings.downloadDir);
+	config.set(config.Keys.DownloadFilePattern, this.settings.downloadFile);
+	config.save();
+	this.close();
+};
+
+/**
+ * Handles the close button
+ */
+SettingsWinCtrl.prototype.close = function() {
+	this.window.close();
+};
+
+SettingsWinCtrl.$inject = ['$scope', '$window'];
 settingsApp.controller('settingsWinCtrl', SettingsWinCtrl);
 
 settingsApp.filter('dstpath', function() {

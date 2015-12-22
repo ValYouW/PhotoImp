@@ -18,12 +18,18 @@
 	    </div>
 		<div class="title">Supported tokens:</div>
 		<div class="row">
-		<div ng-repeat="(key, value) in ctrl.formatters">
-			{{value.pattern}} - {{value.desc}}
+			<div ng-repeat="(key, value) in ctrl.formatters">
+				{{value.pattern}} - {{value.desc}}
+			</div>
 		</div>
+		<div class="row">
+	        <div class="title">Exapmle:</div>
+			<span class="grayedTextbox">{{ctrl.sampleFile|dstpath:ctrl.settings.downloadDir:ctrl.settings.downloadFile}}</span>
 		</div>
-		<div class="title">Exapmle:</div>
-		<span class="grayedTextbox">{{ctrl.sampleFile|dstpath:ctrl.settings.downloadDir:ctrl.settings.downloadFile}}</span>
+	    <div class="toolbar">
+		    <button ng-click="ctrl.save()">Save</button>
+		    <button ng-click="ctrl.close()">Cancel</button>
+	    </div>
     </div>
 </body>
 </html>
