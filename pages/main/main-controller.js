@@ -10,7 +10,7 @@ var CONSTANTS = require('../../common/constants.js'),
 	ipc = require('ipc');
 
 var fileTypes = config.get(config.Keys.FileTypes) || [];
-var downloadPath = config.get(config.Keys.DownloadPath);
+var downloadPath = config.get(config.Keys.DownloadDirPattern);
 var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
 
 function MainController() {

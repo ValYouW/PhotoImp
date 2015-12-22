@@ -1,7 +1,6 @@
 var os = require('os'),
     app = require('app'),
-    config = require('./common/config.js'),
-    mainCtrl = require('./pages/main/main-controller.js');
+    config = require('./common/config.js');
 
 if (process.env.NODE_ENV === 'dev') {
     require('electron-debug')();
@@ -14,5 +13,8 @@ if(os.platform() === 'darwin') {
 
 app.on('ready', function cbAppReady() {
 	config.init(app);
+
+    // Require and load the mainCtrl only after config was init
+    var mainCtrl = require('./pages/main/main-controller.js');
     mainCtrl.show();
 });
