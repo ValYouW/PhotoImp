@@ -1,11 +1,12 @@
 var Model = require('./model.js'),
+	fileFormatter = require('./file-formatter.js'),
 	path = require('path'),
 	fse = require('fs-extra'),
 	fs = require('fs');
 
 function getDstPath(file, downloadPattern) {
 	// todo: calc the real download path based on patterns
-	return path.join(downloadPattern, file.name);
+	return fileFormatter.format(downloadPattern, file);
 }
 
 /**
@@ -100,7 +101,7 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 	}
 
 	var i = 0;
-
+	var abort = false;
 	function copyNext(file) {
 		// Before the copy we report a progress with the current index (just notify that we start to copy),
 		// only after the copy we will advance the completion percentage
@@ -116,14 +117,21 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 			}
 
 			// Move to the next file if there are any
-			if (++i < files.length) {
-				// Since we do copySync we need to free the event-loop between files
-				setTimeout(copyNext, 5, files[i]);
-			} else {
-				cbDone();
+			if (!abort && ++i < files.length) {
+				// Since we do copySync we need to free the event-loop every once in a while
+				if (i % 5 === 0) {
+					setTimeout(copyNext, 5, files[i]);
+				} else {
+					copyNext(files[i]);
+				}
+
+				return;
 			}
+
+			cbDone(abort);
 		});
 	}
 
 	copyNext(files[i]);
+	return function() {console.log('abort');abort = true;};
 };
