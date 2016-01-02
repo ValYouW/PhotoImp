@@ -9,6 +9,7 @@ var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.
 
 function MainWinCtrl(scope) {
 	var self = this;
+	this.downloading = false;
 	/** @type {Model.File[]} */
 	this.files = [];
 	this.fileDates = [];
@@ -109,6 +110,7 @@ MainWinCtrl.prototype.onCopyProgress = function(data) {
 		this.progressbar.set(pct);
 	} else {
 		this.progressbar.complete();
+		this.downloading = false;
 	}
 
 	// We are in IPC cb, need to digest
@@ -116,12 +118,19 @@ MainWinCtrl.prototype.onCopyProgress = function(data) {
 };
 
 MainWinCtrl.prototype.download = function() {
+	if (this.downloading) {
+		this.downloading = false;
+		ipc.send(CONSTANTS.IPC.ABORT);
+		return;
+	}
+
 	// Get all the selected files, if no file is selected then we download all.
 	var selected = this.filesGridApi.selection.getSelectedRows();
 	if (selected.length < 1) {
 		selected = this.files;
 	}
 
+	this.downloading = true;
 	ipc.send(CONSTANTS.IPC.DOWNLOAD, Model.File.serializeArray(selected));
 };
 

@@ -133,5 +133,5 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 	}
 
 	copyNext(files[i]);
-	return function() {console.log('abort');abort = true;};
+	return function() {abort = true;};
 };

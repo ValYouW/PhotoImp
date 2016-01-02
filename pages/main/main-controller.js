@@ -16,7 +16,9 @@ var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
 function MainController() {
 	this.window = null;
 	this.selectedFolder = '';
+	this.abortFn = null;
 	ipc.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
+	ipc.on(CONSTANTS.IPC.ABORT, this.onAbortRequest.bind(this));
 }
 
 MainController.prototype.show = function () {
@@ -60,6 +62,7 @@ MainController.prototype.show = function () {
  * @param {string} folder - The source folder
  */
 MainController.prototype.loadImages = function(folder) {
+	if (!folder) {return;}
 	var downloadPathPattern = path.join(config.get(config.Keys.DownloadDirPattern), config.get(config.Keys.DownloadFilePattern));
 	fileUtils.getFiles(folder, IS_IMG_REGEX, downloadPathPattern, function cbGetFiles(err, data) {
 		if (err) {
@@ -116,7 +119,13 @@ MainController.prototype.onDownloadRequest = function(sender, params) {
 		}
 	}
 
-	var abortFn = fileUtils.copyFiles(files, cbCopyError, cbCopyProgress, cbDoneCopy);
+	this.abortFn = fileUtils.copyFiles(files, cbCopyError, cbCopyProgress, cbDoneCopy);
+};
+
+MainController.prototype.onAbortRequest = function() {
+	if (this.abortFn) {
+		this.abortFn();
+	}
 };
 
 MainController.prototype.onMnuOpenClick = function() {
