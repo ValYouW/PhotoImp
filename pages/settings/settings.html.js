@@ -3,6 +3,7 @@ var CONSTANTS = require('../../common/constants.js'),
 	config = require('../../common/config.js'),
 	fileFormatter = require('../../common/file-formatter.js'),
 	ngUtils = require('../ng-utils.js'),
+	util = require('util'),
 	ipc = require('ipc'),
 	angular = require('angular');
 
@@ -17,8 +18,14 @@ function SettingsWinCtrl(scope, window) {
 	this.window = window;
 	this.settings = {
 		downloadDir: config.get(config.Keys.DownloadDirPattern),
-		downloadFile: config.get(config.Keys.DownloadFilePattern)
+		downloadFile: config.get(config.Keys.DownloadFilePattern),
+		fileTypes: config.get(config.Keys.FileTypes)
 	};
+
+	// Make sure fileTypes is array and make it string for display
+	if (!util.isArray(this.settings.fileTypes)) {this.settings.fileTypes = [];}
+	this.settings.fileTypes = this.settings.fileTypes.join(', ');
+
 	this.formatters = fileFormatter.Formatters;
 	this.sampleFile = new Model.File('DSC_1234.jpg', 1000, new Date());
 
@@ -50,8 +57,20 @@ SettingsWinCtrl.prototype.onDownDirUpdate = function(newDir) {
  * Handles the save button
  */
 SettingsWinCtrl.prototype.save = function() {
+	// Convert the comma separated list into array (trim spaces and ignore empty strings)
+	var fileExts = this.settings.fileTypes.split(',').map(function(s) { return s.trim(); }).filter(String);
+
+	// File extensions can't contain space, if we have such case it means that the user forgot to separate
+	// extensions with commas, show an error message
+	var badExts = fileExts.filter(function(s) { return s.indexOf(' ')>=0; });
+	if (badExts.length > 0) {
+		alert('Extensions must be separated by comma, check: ' + badExts.join(' / '));
+		return;
+	}
+
 	config.set(config.Keys.DownloadDirPattern, this.settings.downloadDir);
 	config.set(config.Keys.DownloadFilePattern, this.settings.downloadFile);
+	config.set(config.Keys.FileTypes, fileExts);
 	config.save();
 	this.close();
 };

@@ -8,13 +8,17 @@
 </head>
 <body>
     <div ng-controller="settingsWinCtrl as ctrl" class="main">
-	    <label for="txtDownDir">Download directory:</label>
+	    <label for="txtSupportedFiles" class="title">Supported File Types:</label>
+	    <div class="inputPair row">
+	        <input class="grayedTextbox" id="txtSupportedFiles" type="text" ng-model="ctrl.settings.fileTypes">
+	    </div>
+	    <label for="txtDownDir" class="title">Download directory:</label>
 	    <div class="inputPair row">
 		    <input id="txtDownDir" type="text" ng-model="ctrl.settings.downloadDir">
 		    <button ng-click="ctrl.chooseDir()">...</button>
 	    </div>
 	    <div class="inputPair row">
-		    <label for="txtDownFile">Filename:</label>
+		    <label for="txtDownFile" class="title">Filename:</label>
 		    <input id="txtDownFile" type="text" ng-model="ctrl.settings.downloadFile">
 	    </div>
 		<div class="title">Supported tokens:</div>
