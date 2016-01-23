@@ -36,7 +36,8 @@ MainController.prototype.show = function () {
 		width: 800,
 		height: 600,
 		resizable: true,
-		title: 'PhotoImp'
+		title: 'PhotoImp',
+		icon: path.resolve(__dirname, '../../assets/logo_32.png')
 	});
 
 	// Create the menu
