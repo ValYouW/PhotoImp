@@ -1,7 +1,6 @@
 var CONSTANTS = require('../../common/constants.js'),
 	Model = require('../../common/model.js'),
 	config = require('../../common/config.js'),
-	path = require('path'),
 	fileFormatter = require('../../common/file-formatter.js'),
 	ngUtils = require('../ng-utils.js'),
 	ipc = require('ipc'),
@@ -9,6 +8,10 @@ var CONSTANTS = require('../../common/constants.js'),
 
 var settingsApp = angular.module('settingsWinApp', []);
 
+/**
+ * The view controller (on the renderer process)
+ * @constructor
+ */
 function SettingsWinCtrl(scope, window) {
 	this.scope = scope;
 	this.window = window;
@@ -18,15 +21,10 @@ function SettingsWinCtrl(scope, window) {
 	};
 	this.formatters = fileFormatter.Formatters;
 	this.sampleFile = new Model.File('DSC_1234.jpg', 1000, new Date());
-	this.registerToIPC();
-}
 
-/**
- * Register to events from the main process
- */
-SettingsWinCtrl.prototype.registerToIPC = function() {
+	// Register to events from the main process
 	ipc.on(CONSTANTS.IPC.DOWNLOAD_DIR_CHANGED, this.onDownDirUpdate.bind(this));
-};
+}
 
 /**
  * Handles the click on the choose directory button
@@ -67,13 +65,3 @@ SettingsWinCtrl.prototype.close = function() {
 
 SettingsWinCtrl.$inject = ['$scope', '$window'];
 settingsApp.controller('settingsWinCtrl', SettingsWinCtrl);
-
-settingsApp.filter('dstpath', function() {
-	return function(file, dirPattern, filePattern) {
-		if (!(file instanceof Model.File)) {return '';}
-		dirPattern = dirPattern || '';
-		filePattern = filePattern || '';
-		var dst = path.join(dirPattern, filePattern);
-		return fileFormatter.format(dst, file);
-	};
-});

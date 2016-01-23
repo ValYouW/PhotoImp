@@ -20,7 +20,7 @@ function File(name, size, mdate) {
 
 /**
  * Serializes an array of files
- * @param {Model.File[]} files - An array of files to serialize
+ * @param {File[]} files - An array of files to serialize
  * @returns {string}
  */
 File.serializeArray = function(files) {
@@ -34,21 +34,23 @@ File.serializeArray = function(files) {
 /**
  * Deserialize files array
  * @param {string} files - A serialized array of files
- * @returns {Model.File[]}
+ * @returns {File[]}
  */
 File.deserializeArray = function(files) {
+	/** @type {File[]} */
+	var decodedFiles;
 	try {
-		files = JSON.parse(files);
+		decodedFiles = JSON.parse(files);
 	} catch(ex) {
 		throw ex;
 	}
 
-	if (!util.isArray(files)) {
+	if (!util.isArray(decodedFiles)) {
 		return null;
 	}
 
 	// Convert the lastModified string to date
-	files.forEach(function(f) {
+	decodedFiles.forEach(function(f) {
 		f.lastModified = new Date(f.lastModified);
 		// If it is not a date create some date
 		if (isNaN(f.lastModified.getDate())) {
@@ -56,7 +58,7 @@ File.deserializeArray = function(files) {
 		}
 	});
 
-	return files;
+	return decodedFiles;
 };
 
 Model.File = File;

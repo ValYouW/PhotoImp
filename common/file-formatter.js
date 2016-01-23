@@ -1,47 +1,83 @@
-var dateformat = require('./dateformat.js');
+var util = require('util'),
+	dateformat = require('./dateformat.js');
 
-//<editor-fold desc=Private functions {...}>
+//<editor-fold desc="// Formatter {...}">
 
-function formatDate(input, file) {
-	if (!this.options || typeof this.options.format !== 'string' || !this.options.format) {return input;}
-	return input.replace(this.formatRegex, dateformat(file.lastModified, this.options.format));
-}
-
-function formatName(input, file) {
-	return input.replace(this.formatRegex, file.name);
-}
-
-//</editor-fold>
-
-function Formatter(pattern, desc, formatFn, options) {
+function Formatter(pattern, desc) {
 	this.pattern = pattern;
 	this.formatRegex = new RegExp(this.pattern, 'g');
 	this.desc = desc;
-	this.formatFn = formatFn;
-	this.options = options;
 }
 
 /**
- * Format the input according to the formatter pattern
- * @param {string} input
- * @param {Model.File} file
+ * Format a pattern string with values from a file
+ * @param {string} input - The input string to format
+ * @param {File} file - The file to take the formatting values from (like date/size etc)
  * @returns {string}
+ * @abstract
  */
-Formatter.prototype.format = function(input, file) {
-	if (!input || !file) {
-		return input;
-	}
+Formatter.prototype.format = function(input, file) {};
 
-	return this.formatFn.call(this, input, file);
+//</editor-fold> // Formatter
+
+//<editor-fold desc="// DateFormatter {...}">
+
+/**
+ * Formats a string using the file's last modified date
+ * @constructor
+ * @inherits {Formatter}
+ */
+function DateFormatter(pattern, desc, options) {
+	Formatter.call(this, pattern, desc);
+
+	// Save the options and make sure it has a valid format string
+	this.options = options;
+	if (!this.options || typeof this.options.format !== 'string' || !this.options.format) { this.options = null; }
+}
+util.inherits(DateFormatter, Formatter);
+
+DateFormatter.prototype.format = function(input, file) {
+	// Make sure we have a formatting options
+	if (!this.options) { return input; }
+	return input.replace(this.formatRegex, dateformat(file.lastModified, this.options.format));
 };
+
+//</editor-fold> // DateFormatter
+
+//<editor-fold desc="// NameFormatter {...}">
+
+/**
+ * Formats a string using the file name
+ * @constructor
+ * @inherits {Formatter}
+ */
+function NameFormatter(pattern, desc) {
+	Formatter.call(this, pattern, desc);
+}
+util.inherits(NameFormatter, Formatter);
+
+NameFormatter.prototype.format = function(input, file) {
+	return input.replace(this.formatRegex, file.name);
+};
+
+//</editor-fold> // NameFormatter
 
 var FileFormatter = {};
 module.exports = FileFormatter;
 
 var allPatternsRegex;
 
+/**
+ * Formats a pattern string using the properties of the file
+ * @param {string} input - An input pattern string to format
+ * @param {File} file - A file object to use as the format values
+ * @returns {string}
+ */
 FileFormatter.format = function(input, file) {
+	// Get a list of all the different supported patterns
 	var patterns = input.match(allPatternsRegex) || [];
+
+	// Loop thru the patterns and use the appropriate formatter (if pattern not supported ignore it)
 	for (var i = 0; i < patterns.length; ++i) {
 		var formatter = FileFormatter.Formatters[patterns[i]];
 		if (!formatter) {continue;}
@@ -51,31 +87,32 @@ FileFormatter.format = function(input, file) {
 	return input;
 };
 
+// Create a list of all supported patterns and for each pattern create its formatter
 FileFormatter.Formatters = {
-	'{o}': new Formatter('{o}', 'Original file name', formatName),
-	'{dt}': new Formatter('{dt}', 'date YYMMDD', formatDate, {format: 'yymmdd'}),
-	'{yy}': new Formatter('{yy}', '2-digit year', formatDate, {format: 'yy'}),
-	'{yyyy}': new Formatter('{yyyy}', '4-digit year', formatDate, {format: 'yyyy'}),
-	'{m}': new Formatter('{m}', 'Month as digits; no leading zero for single-digit months', formatDate, {format: 'm'}),
-	'{mm}': new Formatter('{mm}', 'Month as digits; leading zero for single-digit months', formatDate, {format: 'mm'}),
-	'{mmm}': new Formatter('{mmm}', 'Month as a three-letter abbreviation', formatDate, {format: 'mmm'}),
-	'{mmmm}': new Formatter('{mmmm}', 'Month as its full name', formatDate, {format: 'mmmm'}),
-	'{d}': new Formatter('{d}', 'Day of the month as digits; no leading zero for single-digit days', formatDate, {format: 'd'}),
-	'{dd}': new Formatter('{dd}', 'Day of the month as digits; leading zero for single-digit days', formatDate, {format: 'dd'}),
-	'{ddd}': new Formatter('{ddd}', 'Day of the week as a three-letter abbreviation', formatDate, {format: 'ddd'}),
-	'{dddd}': new Formatter('{dddd}', 'Day of the week as its full name', formatDate, {format: 'dddd'}),
-	'{h}': new Formatter('{h}', 'Hours; no leading zero for single-digit hours (12-hour clock)', formatDate, {format: 'h'}),
-	'{hh}': new Formatter('{hh}', 'Hours; leading zero for single-digit hours (12-hour clock)', formatDate, {format: 'hh'}),
-	'{H}': new Formatter('{H}', 'Hours; no leading zero for single-digit hours (24-hour clock)', formatDate, {format: 'H'}),
-	'{HH}': new Formatter('{HH}', 'Hours; leading zero for single-digit hours (24-hour clock)', formatDate, {format: 'HH'}),
-	'{M}': new Formatter('{M}', 'Minutes; no leading zero for single-digit hours (12-hour clock)', formatDate, {format: 'M'}),
-	'{MM}': new Formatter('{MM}', 'Minutes; leading zero for single-digit hours (12-hour clock)', formatDate, {format: 'MM'}),
-	'{s}': new Formatter('{s}', 'Seconds; no leading zero for single-digit hours (24-hour clock)', formatDate, {format: 's'}),
-	'{ss}': new Formatter('{ss}', 'Seconds; leading zero for single-digit hours (24-hour clock)', formatDate, {format: 'ss'}),
-	'{tt}': new Formatter('{tt}', 'Lowercase, two-character time marker string: am/pm', formatDate, {format: 'tt'}),
-	'{TT}': new Formatter('{TT}', 'Uppercase, two-character time marker string: AM/PM', formatDate, {format: 'TT'})
+	'{o}': new NameFormatter('{o}', 'Original file name'),
+	'{dt}': new DateFormatter('{dt}', 'date YYMMDD', {format: 'yymmdd'}),
+	'{yy}': new DateFormatter('{yy}', '2-digit year', {format: 'yy'}),
+	'{yyyy}': new DateFormatter('{yyyy}', '4-digit year', {format: 'yyyy'}),
+	'{m}': new DateFormatter('{m}', 'Month as digits; no leading zero for single-digit months', {format: 'm'}),
+	'{mm}': new DateFormatter('{mm}', 'Month as digits; leading zero for single-digit months', {format: 'mm'}),
+	'{mmm}': new DateFormatter('{mmm}', 'Month as a three-letter abbreviation', {format: 'mmm'}),
+	'{mmmm}': new DateFormatter('{mmmm}', 'Month as its full name', {format: 'mmmm'}),
+	'{d}': new DateFormatter('{d}', 'Day of the month as digits; no leading zero for single-digit days', {format: 'd'}),
+	'{dd}': new DateFormatter('{dd}', 'Day of the month as digits; leading zero for single-digit days', {format: 'dd'}),
+	'{ddd}': new DateFormatter('{ddd}', 'Day of the week as a three-letter abbreviation', {format: 'ddd'}),
+	'{dddd}': new DateFormatter('{dddd}', 'Day of the week as its full name', {format: 'dddd'}),
+	'{h}': new DateFormatter('{h}', 'Hours; no leading zero for single-digit hours (12-hour clock)', {format: 'h'}),
+	'{hh}': new DateFormatter('{hh}', 'Hours; leading zero for single-digit hours (12-hour clock)', {format: 'hh'}),
+	'{H}': new DateFormatter('{H}', 'Hours; no leading zero for single-digit hours (24-hour clock)', {format: 'H'}),
+	'{HH}': new DateFormatter('{HH}', 'Hours; leading zero for single-digit hours (24-hour clock)', {format: 'HH'}),
+	'{M}': new DateFormatter('{M}', 'Minutes; no leading zero for single-digit hours (12-hour clock)', {format: 'M'}),
+	'{MM}': new DateFormatter('{MM}', 'Minutes; leading zero for single-digit hours (12-hour clock)', {format: 'MM'}),
+	'{s}': new DateFormatter('{s}', 'Seconds; no leading zero for single-digit hours (24-hour clock)', {format: 's'}),
+	'{ss}': new DateFormatter('{ss}', 'Seconds; leading zero for single-digit hours (24-hour clock)', {format: 'ss'}),
+	'{tt}': new DateFormatter('{tt}', 'Lowercase, two-character time marker string: am/pm', {format: 'tt'}),
+	'{TT}': new DateFormatter('{TT}', 'Uppercase, two-character time marker string: AM/PM', {format: 'TT'})
 };
 
-// Loop thru all the formatters and build a global regex like: ({x}|{y}|{z})
+// Loop thru all the patterns and build a global regex like: ({x}|{y}|{z})
 var patterns = Object.keys(FileFormatter.Formatters).join('|');
 allPatternsRegex = new RegExp('(' + patterns + ')', 'g');

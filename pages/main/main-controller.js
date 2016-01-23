@@ -10,17 +10,26 @@ var CONSTANTS = require('../../common/constants.js'),
 	app = require('app'),
 	ipc = require('ipc');
 
-var fileTypes = config.get(config.Keys.FileTypes) || [];
-var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i');
+var fileTypes = config.get(config.Keys.FileTypes) || []; // Supported extensions
+var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i'); // Regex to check if file ext is supported
 
+/**
+ * The window controller (on the main process)
+ * @constructor
+ */
 function MainController() {
 	this.window = null;
 	this.selectedFolder = '';
 	this.abortFn = null;
+
+	// Register to IPC events (to communicate with renderer process)
 	ipc.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
 	ipc.on(CONSTANTS.IPC.ABORT, this.onAbortRequest.bind(this));
 }
 
+/**
+ * Shows the main window
+ */
 MainController.prototype.show = function () {
 	this.settingsWin = null;
 	this.window = new BrowserWindow({
@@ -30,6 +39,7 @@ MainController.prototype.show = function () {
 		title: 'PhotoImp'
 	});
 
+	// Create the menu
 	var menu = Menu.buildFromTemplate([
 		{
 			label: 'File',
@@ -62,7 +72,7 @@ MainController.prototype.show = function () {
  * @param {string} folder - The source folder
  */
 MainController.prototype.loadImages = function(folder) {
-	if (!folder) {return;}
+	if (!folder) { return; }
 	var downloadPathPattern = path.join(config.get(config.Keys.DownloadDirPattern), config.get(config.Keys.DownloadFilePattern));
 	fileUtils.getFiles(folder, IS_IMG_REGEX, downloadPathPattern, function cbGetFiles(err, data) {
 		if (err) {
@@ -82,6 +92,7 @@ MainController.prototype.loadImages = function(folder) {
 			});
 		}
 
+		// Serialize the file list and send it to the view (on renderer process)
 		this.selectedFolder = folder;
 		var files = Model.File.serializeArray(data.files);
 		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, files);
@@ -91,44 +102,63 @@ MainController.prototype.loadImages = function(folder) {
 /**
  * Handles a request from the view to download files
  * @param {object} sender - The sender object from the view
- * @param {string} params - A serialized files list
+ * @param {string} args - A serialized files list
  */
-MainController.prototype.onDownloadRequest = function(sender, params) {
-	var files = Model.File.deserializeArray(params);
-
+MainController.prototype.onDownloadRequest = function(sender, args) {
+	var files = Model.File.deserializeArray(args);
 	var self = this;
+
+	/**
+	 * Handles a copy error event
+	 */
 	function cbCopyError(err) {
 		var response = dialog.showMessageBox(self.window, {
 			type: 'error',
 			buttons: ['Resume', 'Abort'],
 			title: 'Error copying file',
-			message: err
+			message: err.message
 		});
 
 		// Return whether we should resume or not
 		return response !== 1;
 	}
 
+	/**
+	 * Handles a copy progress event
+	 */
 	function cbCopyProgress(data) {
+		// Send the progress data to the view
 		self.window.webContents.send(CONSTANTS.IPC.COPY_PROGRESS, data);
 	}
 
+	/**
+	 * Handles a copy done event
+	 */
 	function cbDoneCopy(aborted) {
+		// In case we abort send a 100% completion to the view (this will close the progress-bar)
 		if (aborted) {
 			self.window.webContents.send(CONSTANTS.IPC.COPY_PROGRESS, 1);
 		}
 	}
 
+	// Start the copy process and save the abort function
 	this.abortFn = fileUtils.copyFiles(files, cbCopyError, cbCopyProgress, cbDoneCopy);
 };
 
+/**
+ * Handles a download abort request from the view
+ */
 MainController.prototype.onAbortRequest = function() {
 	if (this.abortFn) {
 		this.abortFn();
 	}
 };
 
+/**
+ * Handles a File->Open menu event
+ */
 MainController.prototype.onMnuOpenClick = function() {
+	// Show dialog to select directories only
 	var dir = dialog.showOpenDialog(this.window, {
 		title: 'Select source directory',
 		properties: ['openDirectory']
@@ -139,12 +169,17 @@ MainController.prototype.onMnuOpenClick = function() {
 	}
 };
 
+/**
+ * Handles a File->Settings menu event
+ */
 MainController.prototype.onMnuSettingsClick = function() {
+	// If the settings window already open just bring it to the front
 	if (this.settingsWin) {
 		this.settingsWin.focus();
 		return;
 	}
 
+	// Open the settings window and reload all images (with the new settings) when it is closed
 	this.settingsWin = settingsCtrl.show();
 	this.settingsWin.on('closed', function() {
 		this.settingsWin = null;
@@ -152,6 +187,9 @@ MainController.prototype.onMnuSettingsClick = function() {
 	}.bind(this));
 };
 
+/**
+ * Handles the Quit menu item
+ */
 MainController.prototype.onMnuQuitClick = function() {
 	app.quit();
 };

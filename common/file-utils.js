@@ -4,20 +4,17 @@ var Model = require('./model.js'),
 	fse = require('fs-extra'),
 	fs = require('fs');
 
-function getDstPath(file, downloadPattern) {
-	// todo: calc the real download path based on patterns
-	return fileFormatter.format(downloadPattern, file);
-}
+var FILE_EXT_REGEX = /.*\.(.*)$/;
 
 /**
- * Copy file
- * @param {Model.File} file
- * @param {function(string)} cb
+ * Copies a file
+ * @param {File} file - The file details to copy
+ * @param {function(Error)} cb - A response callback
  */
 function copyFile(file, cb) {
 	// Make sure source file exists
 	if (!fs.existsSync(file.srcPath)) {
-		cb('File not found: ' + file.srcPath);
+		cb(new Error('File src not found: ' + file.srcPath));
 		return;
 	}
 
@@ -25,17 +22,17 @@ function copyFile(file, cb) {
 	var dstFolder = path.dirname(file.dstPath);
 	fse.ensureDir(dstFolder, function cbEnsureDir(err) {
 		if (err) {
-			cb('Error creating destination folder: ' + dstFolder);
+			cb(new Error('Error creating destination folder: `' + dstFolder + '`, Error: ' + err.message));
 			return;
 		}
 
 		// Copy the file
-		err = '';
+		err = null;
 		try {
 			// Use copySync as async copy is extremely slow
 			fse.copySync(file.srcPath, file.dstPath, {preserveTimestamps: true});
 		} catch (ignore) {
-			err = 'Error downloading file: ' + file.srcPath;
+			err = new Error('Error downloading file: ' + file.srcPath);
 		}
 
 		cb(err);
@@ -59,9 +56,10 @@ FileUtils.getFiles = function(folder, supportedFilesRegex, downloadPattern, cb) 
 			return;
 		}
 
-		var filteredExts = {}; // Will hold all file extensions that we filtered out
+		var filteredExts = {}; // Will hold all file extensions that we filtered out (unsupported extensions)
 		var loadedFiles = [];
-		for(var i = 0; i < fileNames.length; ++i) {
+		for (var i = 0; i < fileNames.length; ++i) {
+			// Get the file's full path and make sure it's a file
 			var fileName = fileNames[i];
 			var srcPath = path.join(folder, fileName);
 			var stat = fs.lstatSync(srcPath);
@@ -73,13 +71,13 @@ FileUtils.getFiles = function(folder, supportedFilesRegex, downloadPattern, cb) 
 			if (supportedFilesRegex.test(fileName)) {
 				var fileModel =  new Model.File(fileName, stat.size || stat.blocks, stat.mtime);
 				fileModel.srcPath = srcPath;
-				fileModel.dstPath = getDstPath(fileModel, downloadPattern);
+				fileModel.dstPath = fileFormatter.format(downloadPattern, fileModel);
 				loadedFiles.push(fileModel);
 				continue;
 			}
 
 			// This file extension should be ignored, save the extension in the hash
-			var m = fileName.match(/.*\.(.*)$/);
+			var m = fileName.match(FILE_EXT_REGEX);
 			if (m) { filteredExts[m[1]] = true; }
 		}
 
@@ -88,9 +86,9 @@ FileUtils.getFiles = function(folder, supportedFilesRegex, downloadPattern, cb) 
 };
 
 /**
- * Copy a list of files
- * @param {Model.File[]} files - An array of files to copy
- * @param {function(string)} cbError - A SYNC callback, must return a boolean indicating whether operation should resume
+ * Copy a list of files synchronously but releasing the event-loop every 5 files (async copy is very slow)
+ * @param {File[]} files - An array of files to copy
+ * @param {function(Error)} cbError - A SYNC callback, must return a boolean indicating whether operation should resume
  * @param {function({file: string, percentage: number}):boolean} cbProgress - A progress report callback
  * @param {function} cbDone - Callback when done
  */
@@ -106,7 +104,7 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 		// Before the copy we report a progress with the current index (just notify that we start to copy),
 		// only after the copy we will advance the completion percentage
 		cbProgress({file: file.srcPath, percentage: (i)/files.length});
-		copyFile(files[i], 	function cbDoneCopy(err) {
+		copyFile(files[i], function cbDoneCopy(err) {
 			cbProgress({file: file.srcPath, percentage: (i+1)/files.length});
 			if (err) {
 				var resume = cbError(err);

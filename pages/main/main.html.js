@@ -1,79 +1,101 @@
 var CONSTANTS = require('../../common/constants.js'),
 	Model = require('../../common/model.js'),
-	util = require('util'),
 	ipc = require('ipc'),
 	angular = require('angular'),
 	ngUtils = require('../ng-utils.js');
 
+// ui-grid default options
+var GRID_OPTS = {
+	enableRowSelection: true,
+	enableSelectAll: true,
+	enableRowHeaderSelection: false,
+	enableColumnResizing: true,
+	rowHeight: 25,
+	showGridFooter: false,
+	modifierKeysToMultiSelect: true,
+	enableColumnMenus: false
+};
+
 var mainApp = angular.module('mainWinApp', ['ui.grid', 'ui.grid.selection', 'ui.grid.resizeColumns']);
 
-function MainWinCtrl(scope) {
+/**
+ * The view controller (on the renderer process)
+ * @constructor
+ */
+function MainWinCtrl(scope, uiGridConstants) {
 	var self = this;
 	this.downloading = false;
-	/** @type {Model.File[]} */
+	/** @type {File[]} */
 	this.files = [];
 	this.fileDates = [];
 	this.copyProgress = {inprogress: false, file: '', percentage: 0};
 	this.scope = scope;
 
-	this.datesGridOps = {};
-	this.filesGridOpts = {};
-	angular.extend(this.datesGridOps, CONSTANTS.DEFAULTS.SEL_GRID_OPTS);
-	angular.extend(this.filesGridOpts, CONSTANTS.DEFAULTS.SEL_GRID_OPTS);
+	// Create the 2 grid options
+	this.datesGridOps = {}; // This grid holds dates only (the left grid on the page)
+	this.filesGridOpts = {}; // This gird holds file info (the main grid on the page)
+	angular.extend(this.datesGridOps, GRID_OPTS);
+	angular.extend(this.filesGridOpts, GRID_OPTS);
 
 	// The dates grid columns
 	this.datesGridOps.columnDefs = [
-		{ name: 'lastModified', type: 'date', cellFilter: 'localeDateTime:true', enableColumnResizing: false }
+		{ name: 'lastModified', type: 'date', cellFilter: 'localeDateTime:true', enableColumnResizing: false, sort: {priority: 1, direction: uiGridConstants.ASC} }
 	];
-	this.datesGridOps.enableSelectionBatchEvent = false;
+	this.datesGridOps.enableSelectionBatchEvent = false; // Raise the change event for each row instead of single batch event
 
-	// rowSelectionChangedBatch
+	// Register to grid events
 	this.datesGridOps.onRegisterApi = function(gridApi) {
-		self.datesGridApi = gridApi;
-
-		gridApi.selection.on.rowSelectionChanged(self.scope, function cbSelChanged(row) {
-			if (!row.entity || !row.entity.date) { return; }
-			var date = row.entity.date;
-			for (var i = 0; i < self.files.length; ++i) {
-				if (self.files[i].date !== date) { continue; }
-				if (row.isSelected) {
-					self.filesGridApi.selection.selectRow(self.files[i]);
-				} else {
-					self.filesGridApi.selection.unSelectRow(self.files[i]);
-				}
-			}
-		});
+		gridApi.selection.on.rowSelectionChanged(self.scope, self.datesSelectionChanged.bind(self));
 	};
 
 	// The files grid columns
 	this.filesGridOpts.columnDefs = [
 		{ name: 'name' },
 		{ name: 'size', type: 'number', cellFilter: 'bytes2KB' },
-		{ name: 'lastModified', displayName: 'Date', type: 'date', cellFilter: 'localeDateTime'},
+		{ name: 'lastModified', displayName: 'Date', type: 'date', cellFilter: 'localeDateTime', sort: {priority: 1, direction: uiGridConstants.ASC} },
 		{ name: 'dstPath', displayName: 'Download Path' }
 	];
 
+	// Get the files grid api
 	this.filesGridOpts.onRegisterApi = function(gridApi) {
 		self.filesGridApi = gridApi;
 	};
 
+	// Get the progressbar api
 	this.progressbarOptions = {
 		onRegisterApi: function(api) {self.progressbar = api;}
 	};
 
-	this.registerToIPC();
-}
-MainWinCtrl.$inject = ['$scope'];
-mainApp.controller('mainWinCtrl', MainWinCtrl);
-
-MainWinCtrl.prototype.registerToIPC = function() {
+	// Register to IPC events (to communicate with the main process)
 	ipc.on(CONSTANTS.IPC.LOAD_FILE_LIST, this.onLoadFilesRequest.bind(this));
 	ipc.on(CONSTANTS.IPC.COPY_PROGRESS, this.onCopyProgress.bind(this));
+}
+MainWinCtrl.$inject = ['$scope', 'uiGridConstants'];
+mainApp.controller('mainWinCtrl', MainWinCtrl);
+
+/**
+ * Handles a selection change on the dates grid
+ * @param {object} row - The ui-grid row
+ */
+MainWinCtrl.prototype.datesSelectionChanged = function(row) {
+	// Take the row date
+	if (!row.entity || !row.entity.date) { return; }
+	var date = row.entity.date;
+
+	// Loop over all the loaded files (in the files grid) with the same date and select/deselect them accordingly
+	for (var i = 0; i < this.files.length; ++i) {
+		if (this.files[i].date !== date) { continue; }
+		if (row.isSelected) {
+			this.filesGridApi.selection.selectRow(this.files[i]);
+		} else {
+			this.filesGridApi.selection.unSelectRow(this.files[i]);
+		}
+	}
 };
 
 /**
- * A list of files to load
- * @param {File[]} files
+ * Load a list of files
+ * @param {string} files - A list of files to load (serialized File array)
  */
 MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	this.files = Model.File.deserializeArray(files) || [];
@@ -94,12 +116,17 @@ MainWinCtrl.prototype.onLoadFilesRequest = function(files) {
 	this.fileDates = Object.keys(distinctDates).map(function(date) {return distinctDates[date];});
 	this.datesGridOps.data = this.fileDates;
 
+	// Load the files into the grid
 	this.filesGridOpts.data = this.files;
 
 	// We are in IPC cb, need to digest
 	ngUtils.safeApply(this.scope);
 };
 
+/**
+ * Handles a copy progress event (updates the progress bar)
+ * @param {{percentage: number, file: string}} data
+ */
 MainWinCtrl.prototype.onCopyProgress = function(data) {
 	var pct = data.percentage*100;
 	this.copyProgress.inprogress = pct < 100;
@@ -117,12 +144,18 @@ MainWinCtrl.prototype.onCopyProgress = function(data) {
 	ngUtils.safeApply(this.scope);
 };
 
-MainWinCtrl.prototype.download = function() {
+/**
+ * Starts or aborts the download process
+ */
+MainWinCtrl.prototype.downloadOrAbort = function() {
+	// If we are downloading - abort
 	if (this.downloading) {
 		this.downloading = false;
 		ipc.send(CONSTANTS.IPC.ABORT);
 		return;
 	}
+
+	// Start to download
 
 	// Get all the selected files, if no file is selected then we download all.
 	var selected = this.filesGridApi.selection.getSelectedRows();
@@ -133,64 +166,3 @@ MainWinCtrl.prototype.download = function() {
 	this.downloading = true;
 	ipc.send(CONSTANTS.IPC.DOWNLOAD, Model.File.serializeArray(selected));
 };
-
-mainApp.filter('localeDateTime', function() {
-	return function(input, dateOnly) {
-		if (!input || !util.isDate(input)) {
-			return '';
-		} else {
-			return dateOnly ? input.toLocaleDateString() : input.toLocaleString();
-		}
-	};
-});
-
-mainApp.filter('bytes2KB', function() {
-	return function(input) {
-		var size = Number(input);
-		if (isNaN(size)) {
-			return '';
-		} else {
-			return parseInt(size / 1024) + 'KB';
-		}
-	};
-});
-
-mainApp.directive('simpleProgress', ['$document', function($document) {
-	return {
-		// Replace the directive
-		replace: true,
-		// Only use as a element
-		restrict: 'E',
-		scope: {
-			options: '='
-		},
-		link: function (scope) {
-			var body = $document.find('body');
-			var elem = angular.element('<div class="progress hidden"></div>');
-			body.prepend(elem);
-
-			var visible = false;
-			if (typeof scope.options === 'object' && typeof scope.options.onRegisterApi === 'function') {
-				scope.options.onRegisterApi({
-					set: function(pct) {
-						var n = parseInt(pct);
-						if (isNaN(n)) {return;}
-
-						if (n === 0) {return;}
-						if (!visible) {
-							elem.toggleClass('visible hidden');
-							visible = true;
-						}
-
-						elem.css('width', pct + '%');
-					},
-					complete: function() {
-						elem.css('width', '100%');
-						elem.toggleClass('visible hidden');
-						visible = false;
-					}
-				});
-			}
-		}
-	};
-}]);

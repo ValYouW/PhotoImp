@@ -31,7 +31,7 @@ Config.Keys = {
 
 /**
  * Initialize the config
- * NOTE!! This function has to be called from the main process only (which have access to "app" module)
+ * NOTE!! This function has to be called from the main process only (which has access to "app" module)
  * @param {object} app - The electron app module
  */
 Config.init = function(app) {
