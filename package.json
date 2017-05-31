@@ -1,6 +1,6 @@
 {
   "name": "PhotoImp",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Import photos easily to your PC",
   "main": "app.js",
   "scripts": {
