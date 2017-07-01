@@ -28,9 +28,9 @@ class FilesGrid extends React.Component {
 		return <span>{val}</span>;
 	}
 
-	onSelectionChanged(idxs) {
-		var selection = idxs.map(i => this.props.dates[i].dateStr);
-		this.props.selectionChanged(selection);
+	onSelectionChanged(selection) {
+		var res = selection.map(d => d.dateStr);
+		this.props.selectionChanged(res);
 	}
 
 	render() {

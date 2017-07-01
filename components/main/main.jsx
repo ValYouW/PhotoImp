@@ -3,6 +3,7 @@ import {Component} from 'react';
 import FilesGrid from '../files-grid';
 import DatesGrid from '../dates-grid';
 
+import update from 'immutability-helper';
 import {ipcRenderer} from 'electron';
 import CONSTANTS from '../../common/constants.js';
 import {File} from '../../common/model.js';
@@ -53,7 +54,24 @@ class Main extends Component {
 	}
 
 	onDownloadClick() {
+		// If we are downloading - abort
+		if (this.state.downloading) {
+			this.setState(update(this.state, {downloading: {$set: false}}), () => ipcRenderer.send(CONSTANTS.IPC.ABORT));
+			return;
+		}
 
+		// Start to download
+
+		// Get all the selected files, if no file is selected then we download all.
+		var selection = this.filesGrid.getSelection();
+		if (selection.length < 1) {
+			selection = this.state.files;
+		}
+
+		this.setState(update(this.state, {downloading: {$set: true}}), () => {
+			var payload = File.serializeArray(selection);
+			ipcRenderer.send(CONSTANTS.IPC.DOWNLOAD, payload);
+		});
 	}
 
 	render() {

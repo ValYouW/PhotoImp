@@ -26,7 +26,7 @@ class Grid extends React.Component {
 	}
 
 	getSelection() {
-		return this.state.selection;
+		return this.state.selection.map(i => this.state.rows[i]);
 	}
 
 	clearSelection() {

@@ -39,6 +39,10 @@ class FilesGrid extends React.Component {
 		this.grid = null;
 	}
 
+	getSelection() {
+		return this.grid.getSelection();
+	}
+
 	selectByDate(dates) {
 		this.grid.clearSelection();
 		var selection = this.props.files.map((f, i) => {return dates.indexOf(f.dateStr) >= 0 ? i : -1; }).filter(i => i >= 0);
