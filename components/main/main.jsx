@@ -2,6 +2,7 @@ import React from 'react';
 import {Component} from 'react';
 import FilesGrid from '../files-grid';
 import DatesGrid from '../dates-grid';
+import ProgressBar from '../progress-bar';
 
 import update from 'immutability-helper';
 import {ipcRenderer} from 'electron';
@@ -16,10 +17,12 @@ class Main extends Component {
 			files: [],
 			fileDates: [],
 			downloading: false,
+			progress: 0,
 			currFile: ''
 		};
 
 		ipcRenderer.on(CONSTANTS.IPC.LOAD_FILE_LIST, (sender, files) => this.onLoadFiles(files));
+		ipcRenderer.on(CONSTANTS.IPC.COPY_PROGRESS, (sender, data) => this.onCopyProgress(data));
 
 		this.filesGrid = null;
 		this.onDownloadClick = this.onDownloadClick.bind(this);
@@ -47,6 +50,16 @@ class Main extends Component {
 		});
 
 		this.setState({files, fileDates});
+	}
+
+	onCopyProgress(data) {
+		var pct = data.percentage * 100;
+		var merge = {currFile: data.file, progress: pct};
+		if (pct >= 100) {
+			merge.downloading = false;
+		}
+
+		this.setState(update(this.state, {$merge: merge}));
 	}
 
 	onDatesSelected(dates) {
@@ -77,6 +90,7 @@ class Main extends Component {
 	render() {
 		return (
 			<div className="main">
+				<ProgressBar progress={this.state.progress} showProgress={this.state.downloading} />
 				<div className="gridsWrapper">
 					<div className="datesGrid" >
 						<DatesGrid dates={this.state.fileDates} selectionChanged={this.onDatesSelected}/>
