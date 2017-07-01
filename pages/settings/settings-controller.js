@@ -1,28 +1,26 @@
-var CONSTANTS = require('../../common/constants.js'),
-	BrowserWindow = require('browser-window'),
-	Emitter = require('events').EventEmitter,
-	dialog = require('dialog'),
-	util = require('util'),
-	ipc = require('ipc');
+import CONSTANTS from '../../common/constants.js';
+import {ipcMain, dialog, BrowserWindow} from 'electron';
+import {EventEmitter} from 'events';
+import util from 'util';
 
 /**
  * The window controller (on the main process)
  * @constructor
  */
 function SettingsController() {
-	Emitter.call(this);
+	EventEmitter.call(this);
 	this.window = null;
 
 	// Register to IPC events (to communicate with renderer process)
-	ipc.on(CONSTANTS.IPC.OPEN_DIR_DIALOG, this.onOpenDialogRequest.bind(this));
+	ipcMain.on(CONSTANTS.IPC.OPEN_DIR_DIALOG, this.onOpenDialogRequest.bind(this));
 }
-util.inherits(SettingsController, Emitter);
+util.inherits(SettingsController, EventEmitter);
 
 /**
  * Shows the settings window
  * @returns {SettingsController}
  */
-SettingsController.prototype.show = function () {
+SettingsController.prototype.show = function() {
 	this.window = new BrowserWindow({
 		width: 420,
 		height: 580,

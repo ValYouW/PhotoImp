@@ -1,4 +1,4 @@
-module.exports = {
+var CONSTANTS = {
 	IPC: {
 		LOAD_FILE_LIST: 'LOAD_FILE_LIST',
 		DOWNLOAD: 'DOWNLOAD',
@@ -9,3 +9,4 @@ module.exports = {
 	}
 };
 
+export default CONSTANTS;

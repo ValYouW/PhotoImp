@@ -1,26 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="mainWinApp">
+<html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<link rel="stylesheet" type="text/css" href="../../node_modules/angular-ui-grid/ui-grid.css">
 	<link rel="stylesheet" type="text/css" href="main.css">
-	<script src="main.html.js"></script>
-	<script src="filters.js"></script>
-	<script src="directives.js"></script>
-	<script src="../../node_modules/angular-ui-grid/ui-grid.js"></script>
+	<script type="text/javascript">
+		require('babel-register');
+		require('./main.html.js');
+	</script>
 </head>
 <body>
-	<div ng-controller="mainWinCtrl as ctrl" class="main">
-		<simple-progress data-options="ctrl.progressbarOptions"></simple-progress>
-		<div class="gridsWrapper">
-			<div ui-grid="ctrl.datesGridOps" ui-grid-selection class="mainGrid datesGrid"></div>
-			<div ui-grid="ctrl.filesGridOpts" ui-grid-selection class="mainGrid filesGrid"></div>
-		</div>
-		<div class="statusWrapper">
-			<input type="button" value="{{ctrl.downloading ? 'Abort' : 'Download'}}" ng-click="ctrl.downloadOrAbort()" ng-disabled="ctrl.files.length < 1">
-			<span ng-hide="ctrl.files.length < 1 || ctrl.copyProgress.inprogress">{{ctrl.files.length}} files found</span>
-			<span ng-hide="!ctrl.copyProgress.inprogress">Copying: {{ctrl.copyProgress.file}}</span>
-		</div>
-	</div>
+	<div id="main"></div>
 </body>
 </html>

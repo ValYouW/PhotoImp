@@ -9,6 +9,10 @@ body {
     margin: 0;
 }
 
+#main {
+	height: 100%;
+}
+
 .main {
     display: flex;
     flex-direction: column;
@@ -25,7 +29,7 @@ body {
     padding: 5px;
 }
 
-.statusWrapper > input {
+.statusWrapper > button {
     float: right;
 }
 
@@ -34,11 +38,12 @@ body {
 }
 
 .datesGrid {
-    flex: 20;
+    flex: 0.2;
 }
 
 .filesGrid {
-    flex: 80;
+	flex: 0.8;
+	overflow: auto; /* prevents the grid not shrinking on window resize */
 }
 
 .progress {

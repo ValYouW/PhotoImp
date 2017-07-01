@@ -1,14 +1,10 @@
-var CONSTANTS = require('../../common/constants.js'),
-	config = require('../../common/config.js'),
-	BrowserWindow = require('browser-window'),
-	settingsCtrl = require('../settings/settings-controller.js'),
-	fileUtils = require('../../common/file-utils.js'),
-	dialog = require('dialog'),
-	Menu = require('menu'),
-	Model = require('../../common/model.js'),
-	path = require('path'),
-	app = require('app'),
-	ipc = require('ipc');
+import CONSTANTS from '../../common/constants.js';
+import config from '../../common/config.js';
+import {app, BrowserWindow, dialog, Menu, ipcMain} from 'electron';
+import settingsCtrl from '../settings/settings-controller.js';
+import fileUtils from '../../common/file-utils.js';
+import {File} from '../../common/model.js';
+import path from 'path';
 
 var fileTypes = config.get(config.Keys.FileTypes) || []; // Supported extensions
 var IS_IMG_REGEX = new RegExp('.*\.(' + fileTypes.join('|') + ')$', 'i'); // Regex to check if file ext is supported
@@ -23,14 +19,14 @@ function MainController() {
 	this.abortFn = null;
 
 	// Register to IPC events (to communicate with renderer process)
-	ipc.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
-	ipc.on(CONSTANTS.IPC.ABORT, this.onAbortRequest.bind(this));
+	ipcMain.on(CONSTANTS.IPC.DOWNLOAD, this.onDownloadRequest.bind(this));
+	ipcMain.on(CONSTANTS.IPC.ABORT, this.onAbortRequest.bind(this));
 }
 
 /**
  * Shows the main window
  */
-MainController.prototype.show = function () {
+MainController.prototype.show = function() {
 	this.settingsWin = null;
 	this.window = new BrowserWindow({
 		width: 800,
@@ -65,7 +61,7 @@ MainController.prototype.show = function () {
 	]);
 
 	this.window.setMenu(menu);
-	this.window.loadUrl('file://' + __dirname + '/main.html');
+	this.window.loadURL('file://' + __dirname + '/main.html');
 };
 
 /**
@@ -95,7 +91,7 @@ MainController.prototype.loadImages = function(folder) {
 
 		// Serialize the file list and send it to the view (on renderer process)
 		this.selectedFolder = folder;
-		var files = Model.File.serializeArray(data.files);
+		var files = File.serializeArray(data.files);
 		this.window.webContents.send(CONSTANTS.IPC.LOAD_FILE_LIST, files);
 	}.bind(this));
 };
@@ -106,7 +102,7 @@ MainController.prototype.loadImages = function(folder) {
  * @param {string} args - A serialized files list
  */
 MainController.prototype.onDownloadRequest = function(sender, args) {
-	var files = Model.File.deserializeArray(args);
+	var files = File.deserializeArray(args);
 	var self = this;
 
 	/**
@@ -182,10 +178,10 @@ MainController.prototype.onMnuSettingsClick = function() {
 
 	// Open the settings window and reload all images (with the new settings) when it is closed
 	this.settingsWin = settingsCtrl.show();
-	this.settingsWin.on('closed', function() {
+	this.settingsWin.on('closed', () => {
 		this.settingsWin = null;
 		this.loadImages(this.selectedFolder);
-	}.bind(this));
+	});
 };
 
 /**
