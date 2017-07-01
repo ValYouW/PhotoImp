@@ -4,10 +4,13 @@ import FilesGrid from '../files-grid';
 import DatesGrid from '../dates-grid';
 import ProgressBar from '../progress-bar';
 
+import utils from '../../common/utils.js';
 import update from 'immutability-helper';
 import {ipcRenderer} from 'electron';
 import CONSTANTS from '../../common/constants.js';
 import {File} from '../../common/model.js';
+
+utils.injectCSS(document, 'components/main/main.css');
 
 class Main extends Component {
 	constructor(props) {

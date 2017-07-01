@@ -1,0 +1,32 @@
+.main {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.main .gridsWrapper {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+}
+
+.main .statusWrapper {
+	padding: 5px;
+}
+
+.main .statusWrapper > button {
+	float: right;
+}
+
+.main .mainGrid {
+	display: flex;
+}
+
+.main .datesGrid {
+	flex: 0.2;
+}
+
+.main .filesGrid {
+	flex: 0.8;
+	overflow: auto; /* prevents the grid not shrinking on window resize */
+}
