@@ -1,69 +1,71 @@
-var util = require('util'),
-	dateformat = require('./dateformat.js');
+import dateformat from './dateformat.js';
 
-//<editor-fold desc="// Formatter {...}">
+// <editor-fold desc="// Formatter {...}">
 
-function Formatter(pattern, desc) {
-	this.pattern = pattern;
-	this.formatRegex = new RegExp(this.pattern, 'g');
-	this.desc = desc;
+class Formatter {
+	constructor(pattern, desc) {
+		this.pattern = pattern;
+		this.formatRegex = new RegExp(this.pattern, 'g');
+		this.desc = desc;
+	}
+
+	/**
+	 * Format a pattern string with values from a file
+	 * @param {string} input - The input string to format
+	 * @param {File} file - The file to take the formatting values from (like date/size etc)
+	 * @returns {string}
+	 * @abstract
+	 */
+	format(input, file) {}
 }
 
-/**
- * Format a pattern string with values from a file
- * @param {string} input - The input string to format
- * @param {File} file - The file to take the formatting values from (like date/size etc)
- * @returns {string}
- * @abstract
- */
-Formatter.prototype.format = function(input, file) {};
+// </editor-fold> // Formatter
 
-//</editor-fold> // Formatter
-
-//<editor-fold desc="// DateFormatter {...}">
+// <editor-fold desc="// DateFormatter {...}">
 
 /**
  * Formats a string using the file's last modified date
  * @constructor
  * @inherits {Formatter}
  */
-function DateFormatter(pattern, desc, options) {
-	Formatter.call(this, pattern, desc);
+class DateFormatter extends Formatter {
+	constructor(pattern, desc, options) {
+		super(pattern, desc);
 
-	// Save the options and make sure it has a valid format string
-	this.options = options;
-	if (!this.options || typeof this.options.format !== 'string' || !this.options.format) { this.options = null; }
+		// Save the options and make sure it has a valid format string
+		this.options = options;
+		if (!this.options || typeof this.options.format !== 'string' || !this.options.format) { this.options = null; }
+	}
+
+	format(input, file) {
+		// Make sure we have a formatting options
+		if (!this.options) { return input; }
+		return input.replace(this.formatRegex, dateformat(file.lastModified, this.options.format));
+	}
 }
-util.inherits(DateFormatter, Formatter);
 
-DateFormatter.prototype.format = function(input, file) {
-	// Make sure we have a formatting options
-	if (!this.options) { return input; }
-	return input.replace(this.formatRegex, dateformat(file.lastModified, this.options.format));
-};
+// </editor-fold> // DateFormatter
 
-//</editor-fold> // DateFormatter
-
-//<editor-fold desc="// NameFormatter {...}">
+// <editor-fold desc="// NameFormatter {...}">
 
 /**
  * Formats a string using the file name
  * @constructor
  * @inherits {Formatter}
  */
-function NameFormatter(pattern, desc) {
-	Formatter.call(this, pattern, desc);
+class NameFormatter extends Formatter {
+	constructor(pattern, desc) {
+		super(pattern, desc);
+	}
+
+	format(input, file) {
+		return input.replace(this.formatRegex, file.name);
+	}
 }
-util.inherits(NameFormatter, Formatter);
 
-NameFormatter.prototype.format = function(input, file) {
-	return input.replace(this.formatRegex, file.name);
-};
-
-//</editor-fold> // NameFormatter
+// </editor-fold> // NameFormatter
 
 var FileFormatter = {};
-module.exports = FileFormatter;
 
 var allPatternsRegex;
 
@@ -116,3 +118,5 @@ FileFormatter.Formatters = {
 // Loop thru all the patterns and build a global regex like: ({x}|{y}|{z})
 var patterns = Object.keys(FileFormatter.Formatters).join('|');
 allPatternsRegex = new RegExp('(' + patterns + ')', 'g');
+
+export default FileFormatter;

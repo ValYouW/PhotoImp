@@ -9,53 +9,6 @@ body {
     margin: 0;
 }
 
-.main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.gridsWrapper {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-}
-
-.statusWrapper {
-    padding: 5px;
-}
-
-.statusWrapper > input {
-    float: right;
-}
-
-.mainGrid {
-    display: flex;
-}
-
-.datesGrid {
-    flex: 20;
-}
-
-.filesGrid {
-    flex: 80;
-}
-
-.progress {
-    position: fixed;
-    background-color: red;
-    height: 3px;
-    width: 0;
-    z-index: 100;
-}
-
-.progress.visible {
-    visibility: visible;
-    opacity: 1;
-}
-
-.progress.hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s 0.5s, opacity 0.5s linear;
+#main {
+	height: 100%;
 }

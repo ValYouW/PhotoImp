@@ -1,0 +1,41 @@
+.settings {
+	display: flex;
+	flex-direction: column;
+}
+
+.settings .row {
+    margin-bottom: 10px;
+}
+
+.settings .title {
+    font-weight: bold;
+}
+
+.settings .inputPair {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.settings .inputPair label {
+    margin-right: 5px;
+}
+
+.settings .inputPair input {
+    flex: 1;
+}
+
+.settings .inputPair button {
+    margin-left: 2px;
+}
+
+.settings .grayedTextbox {
+    display: block;
+    border: solid 1px gray;
+    padding: 3px;
+}
+
+.settings .toolbar button {
+    float: right;
+    margin-left: 5px;
+}

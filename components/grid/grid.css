@@ -1,0 +1,30 @@
+.grid .react-grid-Container * {
+	box-sizing: border-box;
+}
+
+.grid .react-grid-Cell:focus {
+	outline: none;
+}
+
+.grid .grid-cell .react-grid-Cell__value div {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.grid,
+.grid .react-grid-Container,
+.grid .react-grid-Main,
+.grid .react-grid-Grid,
+.grid .react-grid-Canvas {
+	height: 100%;
+}
+
+.grid .toolbar i {
+	margin-left: 5px;
+	user-select: none;
+}
+
+.grid .toolbar i:hover {
+	cursor: pointer;
+}

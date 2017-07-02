@@ -1,8 +1,8 @@
-var Model = require('./model.js'),
-	fileFormatter = require('./file-formatter.js'),
-	path = require('path'),
-	fse = require('fs-extra'),
-	fs = require('fs');
+import {File} from './model.js';
+import fileFormatter from './file-formatter.js';
+import path from 'path';
+import fse from 'fs-extra';
+import fs from 'fs';
 
 var FILE_EXT_REGEX = /.*\.(.*)$/;
 
@@ -31,7 +31,7 @@ function copyFile(file, cb) {
 		try {
 			// Use copySync as async copy is extremely slow
 			fse.copySync(file.srcPath, file.dstPath, {preserveTimestamps: true});
-		} catch (ignore) {
+		} catch(ignore) {
 			err = new Error('Error downloading file: ' + file.srcPath);
 		}
 
@@ -40,14 +40,13 @@ function copyFile(file, cb) {
 }
 
 var FileUtils = {};
-module.exports = FileUtils;
 
 /**
  * Get download file info from a folder
  * @param {string} folder - The folder from which to read files
  * @param {RegExp} supportedFilesRegex - A regular expression of supported file extensions
  * @param {string} downloadPattern - A download path pattern
- * @param {function(Error, {files: Model.File[], ignored: string[]}=)} cb - Response callback
+ * @param {function(Error, {files: File[], ignored: string[]}=)} cb - Response callback
  */
 FileUtils.getFiles = function(folder, supportedFilesRegex, downloadPattern, cb) {
 	fs.readdir(folder, function cbReadDir(err, fileNames) {
@@ -69,7 +68,7 @@ FileUtils.getFiles = function(folder, supportedFilesRegex, downloadPattern, cb) 
 
 			// Check the file extension against the filter, if it passes create the file
 			if (supportedFilesRegex.test(fileName)) {
-				var fileModel =  new Model.File(fileName, stat.size || stat.blocks, stat.mtime);
+				var fileModel =  new File(fileName, stat.size || stat.blocks, stat.mtime);
 				fileModel.srcPath = srcPath;
 				fileModel.dstPath = fileFormatter.format(downloadPattern, fileModel);
 				loadedFiles.push(fileModel);
@@ -103,9 +102,9 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 	function copyNext(file) {
 		// Before the copy we report a progress with the current index (just notify that we start to copy),
 		// only after the copy we will advance the completion percentage
-		cbProgress({file: file.srcPath, percentage: (i)/files.length});
+		cbProgress({file: file.srcPath, percentage: (i) / files.length});
 		copyFile(files[i], function cbDoneCopy(err) {
-			cbProgress({file: file.srcPath, percentage: (i+1)/files.length});
+			cbProgress({file: file.srcPath, percentage: (i + 1) / files.length});
 			if (err) {
 				var resume = cbError(err);
 				if (!resume) {
@@ -131,5 +130,7 @@ FileUtils.copyFiles = function(files, cbError, cbProgress, cbDone) {
 	}
 
 	copyNext(files[i]);
-	return function() {abort = true;};
+	return function _abort() {abort = true;};
 };
+
+export default FileUtils;
