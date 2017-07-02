@@ -1,6 +1,6 @@
 # PhotoImp
 A simple tool for easily importing photos from your camera/phone to the computer.
-Inspired by Breeze Systems - DownloaderPro, written in electron.js and Angular.
+Inspired by Breeze Systems - DownloaderPro, written in electron.js and React.
 
 ![Main screen](assets/MainScreen.png)
 
