@@ -18,5 +18,5 @@ app.on('ready', function cbAppReady() {
 
 	// Require and load the mainCtrl only after config was init
 	var mainCtrl = require('./pages/main/main-controller.js');
-	mainCtrl.show();
+	mainCtrl.default.show();
 });

@@ -16,7 +16,7 @@ Utils.isArray = Array.isArray;
  * @param {string} file - The css file path to inject relative to the project root
  */
 Utils.injectCSS = function(document, file) {
-	file = path.join(process.cwd(), file);
+	file = path.resolve(__dirname, '../', file);
 	file = file.replace(/\\/g, '/');
 	if (injectedCSS[file]) {return;}
 	var style = document.createElement('style');

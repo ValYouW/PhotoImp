@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /*
  * Date Format 1.2.3
  * (c) 2007-2009 Steven Levithan <stevenlevithan.com>
@@ -19,28 +21,28 @@
       var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZWN]|'[^']*'|'[^']*'/g;
       var timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g;
       var timezoneClip = /[^-+\dA-Z]/g;
-  
+
       // Regexes and supporting functions are cached through closure
       return function (date, mask, utc, gmt) {
-  
+
         // You can't provide utc if you skip other args (use the 'UTC:' mask prefix)
         if (arguments.length === 1 && kindOf(date) === 'string' && !/\d/.test(date)) {
           mask = date;
           date = undefined;
         }
-  
+
         date = date || new Date;
-  
+
         if(!(date instanceof Date)) {
           date = new Date(date);
         }
-  
+
         if (isNaN(date)) {
           throw TypeError('Invalid date');
         }
-  
+
         mask = String(dateFormat.masks[mask] || mask || dateFormat.masks['default']);
-  
+
         // Allow setting the utc/gmt argument via the mask
         var maskSlice = mask.slice(0, 4);
         if (maskSlice === 'UTC:' || maskSlice === 'GMT:') {
@@ -50,7 +52,7 @@
             gmt = true;
           }
         }
-  
+
         var _ = utc ? 'getUTC' : 'get';
         var d = date[_ + 'Date']();
         var D = date[_ + 'Day']();
@@ -94,7 +96,7 @@
           W:    W,
           N:    N
         };
-  
+
         return mask.replace(token, function (match) {
           if (match in flags) {
             return flags[match];
@@ -174,7 +176,7 @@ function getWeek(date) {
 /**
  * Get ISO-8601 numeric representation of the day of the week
  * 1 (for Monday) through 7 (for Sunday)
- * 
+ *
  * @param  {Object} `date`
  * @return {Number}
  */
