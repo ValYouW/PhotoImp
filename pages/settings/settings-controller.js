@@ -1,6 +1,7 @@
 import CONSTANTS from '../../common/constants.js';
 import {ipcMain, dialog, BrowserWindow} from 'electron';
 import {EventEmitter} from 'events';
+import path from 'path';
 import util from 'util';
 
 /**
@@ -25,12 +26,13 @@ SettingsController.prototype.show = function() {
 		width: 420,
 		height: 580,
 		resizable: true,
-		title: 'Settings'
+		title: 'Settings',
+		icon: path.resolve(__dirname, '../../assets/logo_32.png')
 	});
 
 	// Hide the default menu
 	this.window.setMenu(null);
-	this.window.loadUrl('file://' + __dirname + '/settings.html');
+	this.window.loadURL('file://' + __dirname + '/settings.html');
 	this.window.on('closed', this.onClosed.bind(this));
 	return this;
 };
