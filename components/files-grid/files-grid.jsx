@@ -74,8 +74,8 @@ class FilesGrid extends React.Component {
 				rowHeight={30}
 				rows={this.props.files}
 				enableRowSelect={true}
-                selectOnClick={true}
-                showCheckbox={false}
+				selectOnClick={true}
+				showCheckbox={false}
 			/>
 		);
 	}

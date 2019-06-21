@@ -40,9 +40,9 @@ class FilesGrid extends React.Component {
 				rowHeight={30}
 				rows={this.props.dates}
 				enableRowSelect={true}
-                selectOnClick={true}
-                showCheckbox={false}
-                selectionChanged={this.onSelectionChanged}
+				selectOnClick={true}
+				showCheckbox={false}
+				selectionChanged={this.onSelectionChanged}
 			/>
 		);
 	}
