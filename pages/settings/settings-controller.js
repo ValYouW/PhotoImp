@@ -22,7 +22,10 @@ class SettingsController extends EventEmitter {
 			height: 580,
 			resizable: true,
 			title: 'Settings',
-			icon: path.resolve(__dirname, '../../assets/logo_32.png')
+			icon: path.resolve(__dirname, '../../assets/logo_32.png'),
+			webPreferences: {
+				nodeIntegration: true
+			}
 		});
 
 		// Hide the default menu

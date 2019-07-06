@@ -35,7 +35,10 @@ class MainController {
 			height: 600,
 			resizable: true,
 			title: 'PhotoImp',
-			icon: path.resolve(__dirname, '../../assets/logo_32.png')
+			icon: path.resolve(__dirname, '../../assets/logo_32.png'),
+			webPreferences: {
+				nodeIntegration: true
+			}
 		});
 
 		// Create the menu

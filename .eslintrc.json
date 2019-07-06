@@ -1,4 +1,9 @@
 {
+	"settings": {
+		"react": {
+			"version": "detect"
+		}
+	},
 	"parser": "babel-eslint",
 	"parserOptions": {
 		"ecmaVersion": 6,
@@ -48,7 +53,8 @@
 			}
 		],
 		"no-mixed-spaces-and-tabs": 2,
-		//"one-var": [2, { "uninitialized": "always", "initialized": "never" }],
+		"no-mixed-requires": 2,
+		// "one-var": ["error", { "separateRequires": true, "var": "never" }],
 		"quote-props": [
 			2,
 			"as-needed"
@@ -117,6 +123,7 @@
 			"unix"
 		],
 		// Node
-		"no-new-require": 2
+		"no-new-require": 2,
+		"react/no-find-dom-node": 0
 	}
 }

@@ -1,4 +1,4 @@
-require('babel-register');
+require('@babel/register');
 
 var os = require('os'),
 	{app} = require('electron'),

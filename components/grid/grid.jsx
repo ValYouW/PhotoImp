@@ -105,7 +105,7 @@ class Grid extends React.Component {
 			};
 
 			if (!allowMultiSelect) {
-				extraProps.enableRowSelect = 'single';
+				extraProps.rowSelection.enableShiftSelect = false;
 			}
 
 			if (selectOnClick) {
